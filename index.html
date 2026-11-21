@@ -580,6 +580,8 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .topbar.push{padding-top:calc(38px + env(safe-area-inset-top))}
+  /* '이 기기에만' 줄이 떠 있을 때는 편집기·손글씨 판도 그만큼 내린다 — 위 줄에 가리지 않게 */
+  [data-local="1"] .editor,[data-local="1"] .draw{padding-top:calc(26px + env(safe-area-inset-top))}
 
   /* ── 설정 시트 ─────────────────────────────── */
   .sheet{position:fixed;inset:0;z-index:70;background:rgba(10,12,16,.44);display:flex;align-items:flex-end;justify-content:center}
@@ -1444,6 +1446,8 @@
     var on = (Sync.mode === "local");
     if ($.localbar) $.localbar.hidden = !on;
     if ($.topbar) $.topbar.className = "topbar" + (on ? " push" : "");
+    /* 편집기·손글씨 판도 같은 높이만큼 내려 위 줄에 가리지 않게 */
+    try { document.documentElement.setAttribute("data-local", on ? "1" : "0"); } catch (e) {}
   }
 
   function startLocal() {
