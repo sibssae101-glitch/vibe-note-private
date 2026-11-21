@@ -44,6 +44,14 @@
 - **파일에서 가져오기**: 파일을 고르면 무엇이 들어오는지 한 줄로 보여 주고, 확인을 눌러야 덮어씁니다.
   병합하지 않습니다. 덮어쓰기 전 값은 이 기기의 `vnp-backup-before-import-v1` 에 남깁니다.
 
+## 브리핑은 스스로 갱신됩니다
+
+브리핑 탭은 열 때마다 공개 배포 주소
+`https://sibssae101-glitch.github.io/vibe-note/data/briefings/index.json` 에서 그날 자료를 받아 옵니다.
+시장 수치·뉴스만 있는 공개 자료이고, **받기만 합니다**(무엇도 보내지 않습니다).
+받아 둔 사본은 이 기기의 `vnp-briefs-auto-v1` 에 남아, 인터넷이 없으면 마지막으로 받은 것을 그대로 보여 줍니다.
+받아 온 브리핑은 드라이브 `바이브노트.json` 에 섞이지 않습니다(일정·메모만 올라갑니다).
+
 ## 기록이 사는 곳
 
 - **이 기기에만(기본)**: `vnp-mirror-v1` 하나에 다섯 키를 함께 담습니다 —
@@ -51,6 +59,7 @@
   `vn-notes-v1`(메모·손글씨) · `vn-theme`(밝게/어둡게).
 - **구글에 연결한 뒤**: 드라이브의 앱 전용 폴더 `vibe-note/` 안 **`바이브노트.json` 한 파일**.
   녹음 본체는 같은 폴더 아래 `vibe-note/audio/YYYYMMDD-HHMMSS.webm`(아이폰은 `.m4a`).
+- 브리핑 받아 둔 사본은 `vnp-briefs-auto-v1`(기기에만) — 드라이브 문서에는 넣지 않습니다.
 - 소리는 어느 쪽이든 **localStorage 에 절대 쓰지 않습니다.** 기기 사본은 IndexedDB(`vibe-note-audio`).
 - 스코프는 `https://www.googleapis.com/auth/drive.file` **하나뿐**입니다. 이 앱이 만들거나 연 파일 말고는
   드라이브의 다른 어떤 파일도 볼 수 없습니다.
