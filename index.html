@@ -1497,7 +1497,7 @@
       var m = "없음";
       if (MIRROR && MIRROR.savedAt) {
         m = whenLabel(new Date(MIRROR.savedAt).getTime());
-        if (MIRROR.dirty) m += " · 올리지 못한 변경 있음";
+        if (MIRROR.dirty && Sync.mode !== "local") m += " · 올리지 못한 변경 있음";
       }
       $.setMirror.textContent = m;
     }
