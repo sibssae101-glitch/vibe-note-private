@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" id="vn-tc" content="#f3f5f9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="바이브 노트">
+<title>바이브 노트</title>
+<meta name="description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트. 구글 계정으로 연결하면 기록이 내 드라이브에 저장되고, 폰과 PC 에서 같게 보입니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="바이브 노트">
+<meta property="og:description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트 · 개인 기록은 각자의 구글 드라이브에">
+<meta property="og:image" content="https://sibssae101-glitch.github.io/vibe-note-private/icon-512.png">
+<meta name="twitter:card" content="summary">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script>
+/* 테마는 그리기 전에 정한다 — 깜빡임 없이.
+   저장된 값 → 없으면 폰 설정(prefers-color-scheme) → 라이트 */
+(function () {
+  var t = null;
+  try { t = window.localStorage && localStorage.getItem("vnp-theme-local"); } catch (e) {}
+  if (t !== "light" && t !== "dark") {
+    t = "light";
+    try {
+      if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+    } catch (e) {}
+  }
+  document.documentElement.setAttribute("data-theme", t);
+  var tc = document.getElementById("vn-tc");
+  if (tc) tc.setAttribute("content", t === "dark" ? "#0d0f13" : "#f3f5f9");
+})();
+</script>
+<style>
+  /* ── 라이트 (기본) ───────────────────────────── */
+  :root{
+    color-scheme:light;
+    --bg:#f3f5f9;
+    --bg-soft:#fbfcfe;
+    --card:#ffffff;
+    --line:#e6e9f1;
+    --line2:#ccd2df;
+    --text:#14161b;
+    --dim:#5b6373;
+    --dim2:#8b93a3;
+    --fill:#eef1f6;
+    --accent:#d93b30;
+    --accent-2:#ff7a5c;
+    --accent-soft:rgba(217,59,48,.08);
+    --accent-line:rgba(217,59,48,.26);
+    --ok:#0d9560;
+    --ok-soft:rgba(13,149,96,.12);
+    --shadow:0 1px 2px rgba(18,23,35,.05), 0 10px 26px rgba(18,23,35,.06);
+    --shadow-sm:0 1px 2px rgba(18,23,35,.06);
+    --r:18px;
+    --r-sm:13px;
+    --hdr:rgba(243,245,249,.86);
+  }
+  /* ── 다크 ────────────────────────────────────── */
+  [data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0d0f13;
+    --bg-soft:#121620;
+    --card:#171b23;
+    --line:#252a35;
+    --line2:#3a4250;
+    --text:#e9ecf2;
+    --dim:#98a1b1;
+    --dim2:#6a7280;
+    --fill:#1d222c;
+    --accent:#ff5b52;
+    --accent-2:#ff9678;
+    --accent-soft:rgba(255,91,82,.10);
+    --accent-line:rgba(255,91,82,.30);
+    --ok:#5cdea0;
+    --ok-soft:rgba(92,222,160,.14);
+    --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 12px 28px rgba(0,0,0,.38);
+    --shadow-sm:0 1px 0 rgba(255,255,255,.03) inset;
+    --r:18px;
+    --r-sm:13px;
+    --hdr:rgba(13,15,19,.82);
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html{-webkit-text-size-adjust:100%;background:var(--bg)}
+  body{
+    max-width:600px;margin:0 auto;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    font-size:15px;line-height:1.62;letter-spacing:-.2px;
+    padding:0 0 calc(88px + env(safe-area-inset-bottom));
+    overflow-wrap:break-word;
+    -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  a{color:inherit}
+  button{font-family:inherit}
+
+  /* ── 머리 ───────────────────────────────────── */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;gap:10px;
+    padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+    background:var(--hdr);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{min-width:0;flex:1}
+  .brand .eyebrow{
+    display:flex;align-items:center;gap:6px;
+    font-size:10.5px;font-weight:700;letter-spacing:.9px;
+    color:var(--accent);text-transform:uppercase;
+  }
+  .brand .eyebrow i{
+    width:6px;height:6px;border-radius:50%;
+    background:linear-gradient(160deg,var(--accent),var(--accent-2));
+    display:inline-block;
+  }
+  h1{
+    margin:2px 0 0;font-size:21px;font-weight:800;letter-spacing:-.6px;
+    line-height:1.2;
+  }
+  .theme{
+    flex:0 0 auto;width:40px;height:40px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--card);color:var(--text);
+    border:1px solid var(--line);box-shadow:var(--shadow-sm);
+    cursor:pointer;padding:0;
+    transition:background .2s ease, border-color .2s ease, transform .12s ease;
+  }
+  .theme:active{transform:scale(.94)}
+  .theme svg{width:19px;height:19px;display:block}
+  .theme .moon{display:none}
+  [data-theme="dark"] .theme .sun{display:none}
+  [data-theme="dark"] .theme .moon{display:block}
+
+  main{padding:0 14px}
+
+  /* ── 카드·배지 공통 ──────────────────────────
+     세 탭이 같은 물건처럼 보이도록 표면·반경·여백·글자 크기는 여기서만 정한다. */
+  .cal, article.entry, .brief, .memo, .compose, .memo-empty, .notice{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r);padding:15px;
+  }
+  .cal, article.entry, .open, .brief, .memo, .compose, .memo-empty{box-shadow:var(--shadow)}
+  .notice{box-shadow:var(--shadow-sm)}
+  .count, .badge, .kind, .ex{
+    display:inline-flex;align-items:center;border-radius:999px;
+    font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 8px;
+  }
+
+  /* ── 안내 띠 ────────────────────────────────── */
+  .notice{
+    display:flex;align-items:center;gap:10px;
+    margin:12px 14px 0;padding:12px 14px;
+    border-style:dashed;border-color:var(--accent-line);
+    font-size:11.5px;line-height:1.5;color:var(--dim);
+  }
+  .notice span{flex:1;min-width:0}
+  .notice b{color:var(--accent)}
+  .notice button{
+    flex:0 0 auto;font-size:11px;font-weight:800;color:#fff;
+    background:var(--accent);border:0;border-radius:9px;
+    padding:7px 10px;cursor:pointer;
+  }
+
+  /* ── 구역 제목 ──────────────────────────────── */
+  section{margin:22px 0 0}
+  .pane{margin:0}
+  #pane-schedule > section, #pane-schedule > #open-card > section{margin-top:22px}
+  h2{
+    display:flex;align-items:center;gap:8px;
+    margin:0 0 10px;padding-right:2px;
+    font-size:12.5px;font-weight:750;letter-spacing:.2px;color:var(--dim);
+  }
+  h2::before{
+    content:"";width:3px;height:13px;border-radius:2px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2));
+  }
+  .count{
+    margin-left:auto;
+    color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);
+  }
+  .count.zero{color:var(--dim2);background:var(--fill);border-color:var(--line)}
+
+  /* ── 안 끝난 일 ─────────────────────────────── */
+  .open{
+    list-style:none;margin:0;padding:4px 14px;
+    background:var(--card);border:1px solid var(--line);
+    border-left:3px solid var(--accent);
+    border-radius:var(--r);box-shadow:var(--shadow);
+  }
+  .open li{
+    display:flex;align-items:flex-start;gap:10px;padding:11px 0;
+    font-size:13.5px;border-top:1px solid var(--line);
+  }
+  .open li:first-child{border-top:none}
+  .open .jump{
+    margin-left:auto;flex:0 0 auto;font-size:11px;font-weight:600;font-family:inherit;
+    color:var(--dim);background:var(--fill);border:1px solid var(--line);
+    border-radius:999px;padding:2px 8px;white-space:nowrap;cursor:pointer;
+  }
+  .open .jump:active{background:var(--accent-soft);color:var(--accent)}
+  .open .txt{flex:1;min-width:0}
+
+  /* ── 체크박스 ───────────────────────────────── */
+  input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;
+    width:19px;height:19px;margin:2px 0 0;flex:0 0 auto;
+    border-radius:7px;border:1.6px solid var(--line2);
+    background:var(--card);position:relative;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  input[type=checkbox]:checked{
+    background:linear-gradient(160deg,var(--accent),var(--accent-2));
+    border-color:transparent;
+  }
+  input[type=checkbox]:checked::after{
+    content:"";position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);
+  }
+
+  /* ── 달력 ───────────────────────────────────── */
+  .cal{padding:15px}
+  .calhead{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+  .calhead button{
+    height:32px;flex:0 0 auto;
+    background:var(--fill);color:var(--text);
+    border:1px solid var(--line);border-radius:10px;
+    font-family:inherit;font-size:15px;line-height:1;cursor:pointer;padding:0;
+    transition:background .15s ease;
+  }
+  .calhead .nav{width:34px}
+  .calhead .today-btn{width:auto;padding:0 10px;font-size:11px;font-weight:800;color:var(--dim)}
+  .calhead button:active{background:var(--accent-soft);color:var(--accent)}
+  .ym{flex:1;text-align:center;font-size:14.5px;font-weight:750;letter-spacing:-.2px}
+  .dow,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:440px;margin:0 auto}
+  .dow div{text-align:center;font-size:10.5px;font-weight:700;color:var(--dim2);padding:2px 0 4px}
+  .dow div:first-child{color:var(--accent)}
+  .cell{
+    min-height:38px;aspect-ratio:1/1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    border-radius:11px;font-size:13px;font-family:inherit;color:var(--text);
+    background:none;border:1px solid transparent;padding:0;cursor:pointer;
+  }
+  .cell.empty{border:none;cursor:default}
+  .cell.has{
+    background:var(--accent-soft);border-color:var(--accent-line);
+    color:var(--accent);font-weight:800;
+  }
+  .cell.has small{width:4px;height:4px;border-radius:50%;background:var(--accent);display:block}
+  .cell.today{box-shadow:inset 0 0 0 1.6px var(--accent-line);font-weight:800}
+  .cell.today:not(.has){color:var(--accent)}
+  .cell.sel{box-shadow:inset 0 0 0 2px var(--accent);font-weight:800}
+  .cell.sel:not(.has){color:var(--accent)}
+  .legend{margin:10px 0 0;font-size:11.5px;color:var(--dim2);text-align:center}
+  .legend b{color:var(--accent);font-weight:700}
+
+  /* ── 날짜 기록 카드 ─────────────────────────── */
+  article.entry{margin:12px 0 0;scroll-margin-top:78px}
+  .dayhead{display:flex;align-items:center;gap:8px}
+  article.entry h3{
+    margin:0;font-size:14.5px;font-weight:800;letter-spacing:-.3px;
+  }
+  .badge{
+    margin-left:auto;flex:0 0 auto;
+    color:var(--dim);background:var(--fill);border:1px solid var(--line);
+  }
+  .badge.done{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+  .when{margin:3px 0 0;font-size:11.5px;color:var(--dim2);font-weight:600}
+  .lab{
+    display:block;margin:15px 0 4px;
+    font-size:10.5px;font-weight:800;letter-spacing:.7px;color:var(--accent);
+  }
+  .ex{
+    flex:0 0 auto;margin-top:3px;
+    color:var(--dim2);border:1px solid var(--line);
+  }
+
+  /* 줄 목록 */
+  ul.lines{list-style:none;margin:0;padding:0}
+  ul.lines li{
+    display:flex;align-items:flex-start;gap:8px;
+    padding:5px 0;font-size:13.5px;line-height:1.55;color:var(--text);
+  }
+  ul.lines li .t{flex:1;min-width:0}
+  ul.lines li.none{color:var(--dim2);font-size:12.5px}
+  ul.lines .num{
+    flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+    min-width:17px;height:17px;margin-top:2px;padding:0 4px;
+    font-size:10.5px;font-weight:800;color:var(--dim2);
+    background:var(--fill);border-radius:6px;
+  }
+  .x{
+    flex:0 0 auto;border:0;background:none;color:var(--dim2);
+    font-size:16px;line-height:1;padding:0 5px;margin-top:-1px;cursor:pointer;
+  }
+  .x:active{color:var(--accent)}
+
+  /* 해야 할 거 */
+  ul.todo{list-style:none;margin:0;padding:0}
+  ul.todo li{display:flex;align-items:flex-start;gap:9px;padding:5px 0;font-size:13.5px;line-height:1.55}
+  ul.todo li .t{flex:1;min-width:0;cursor:pointer}
+  ul.todo li .t.done{color:var(--dim2);text-decoration:line-through}
+  ul.todo li.none{color:var(--dim2);font-size:12.5px}
+
+  /* 한 줄 추가 */
+  .secrow{
+    display:flex;gap:5px;flex-wrap:wrap;
+    margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line2);
+  }
+  .sec{
+    font-size:11px;font-weight:700;color:var(--dim);
+    background:var(--fill);border:1px solid var(--line);
+    border-radius:999px;padding:4px 10px;cursor:pointer;
+  }
+  .sec.on{color:var(--accent);background:var(--accent-soft);border-color:var(--accent-line);font-weight:800}
+  .addrow{display:flex;gap:6px;margin-top:8px}
+  .addrow input{
+    flex:1;min-width:0;font-family:inherit;font-size:13px;color:var(--text);
+    background:var(--fill);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;letter-spacing:-.2px;
+  }
+  .addrow input::placeholder{color:var(--dim2)}
+  .addrow .add{
+    flex:0 0 auto;font-size:17px;font-weight:800;color:#fff;
+    background:var(--accent);border:0;border-radius:10px;padding:0 15px;cursor:pointer;
+  }
+  .addrow .add:active{opacity:.85}
+
+  /* ── 메모 탭 ────────────────────────────────── */
+  .memhead{padding:18px 2px 0}
+  .memrow{display:flex;align-items:center;gap:8px;min-height:32px}
+  .memrow h2{margin:0}
+  .act{
+    margin-left:auto;flex:0 0 auto;font-size:12px;font-weight:800;
+    color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);border-radius:999px;
+    padding:6px 12px;cursor:pointer;
+  }
+  .daterow{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 0 0}
+  .daterow .nav{
+    width:32px;height:32px;border-radius:10px;
+    background:var(--fill);border:1px solid var(--line);color:var(--accent);
+    font-family:inherit;font-size:15px;line-height:1;padding:0;cursor:pointer;
+  }
+  .daterow .chip{
+    padding:7px 16px;border-radius:999px;
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    color:var(--accent);font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;
+  }
+  .note{
+    display:block;width:100%;text-align:left;cursor:pointer;margin:12px 0 0;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:15px;box-shadow:var(--shadow);
+    font-family:inherit;color:var(--text);
+  }
+  .note .t{
+    font-size:14.5px;font-weight:800;letter-spacing:-.3px;line-height:1.4;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .note .meta{
+    display:flex;align-items:center;gap:6px;margin:3px 0 0;
+    font-size:12.5px;font-weight:800;color:var(--dim2);
+  }
+  .note .p{
+    margin:4px 0 0;font-size:13.5px;line-height:1.55;color:var(--dim);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  body.locked{overflow:hidden}
+
+  /* ── 메모 편집기 ────────────────────────────── */
+  .editor{
+    position:fixed;inset:0;z-index:40;max-width:600px;margin:0 auto;
+    display:flex;flex-direction:column;background:var(--bg);
+    padding-top:env(safe-area-inset-top);
+  }
+  .edbar{
+    display:flex;align-items:center;gap:8px;padding:10px 12px;
+    border-bottom:1px solid var(--line);background:var(--hdr);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    backdrop-filter:saturate(180%) blur(14px);
+  }
+  .edbtn{
+    flex:0 0 auto;font-family:inherit;font-size:13px;font-weight:800;
+    color:var(--accent);background:none;border:0;border-radius:10px;
+    padding:6px 8px;cursor:pointer;
+  }
+  .edbtn.plain{color:var(--dim)}
+  .edbtn.solid{color:#fff;background:var(--accent);border-radius:999px;padding:6px 12px}
+  .edwhen{
+    flex:1;min-width:0;text-align:center;
+    font-size:12px;font-weight:700;color:var(--dim2);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .edconfirm{
+    display:flex;align-items:center;gap:8px;padding:10px 14px;
+    background:var(--accent-soft);border-bottom:1px solid var(--accent-line);
+    font-size:12.5px;font-weight:800;color:var(--accent);
+  }
+  .edconfirm span{flex:1;min-width:0}
+  .edbody{
+    flex:1;min-height:0;overflow:auto;background:var(--card);
+    display:flex;flex-direction:column;
+  }
+  #ed-text{
+    flex:0 0 auto;width:100%;min-height:44vh;resize:none;border:0;outline:none;
+    display:block;background:var(--card);color:var(--text);
+    font-family:inherit;font-size:16px;line-height:1.75;letter-spacing:-.2px;
+    padding:18px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  #ed-text::placeholder{color:var(--dim2)}
+  .edimg{
+    display:block;width:100%;height:auto;
+    border-top:1px solid var(--line);background:#ffffff;
+  }
+  .draw{
+    position:fixed;inset:0;z-index:50;max-width:600px;margin:0 auto;
+    display:flex;flex-direction:column;background:var(--bg);
+    padding-top:env(safe-area-inset-top);
+  }
+  .edbtn[aria-pressed="true"]{
+    color:var(--accent);background:var(--accent-soft);
+    box-shadow:inset 0 0 0 1px var(--accent-line);
+  }
+  .canvaswrap{
+    flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+    padding:14px;overflow:auto;
+  }
+  #draw-canvas{
+    display:block;touch-action:none;background:#ffffff;
+    border:1px solid var(--line);border-radius:var(--r-sm);
+    box-shadow:var(--shadow-sm);cursor:crosshair;
+  }
+  .drawhint{
+    margin:0;padding:0 14px calc(14px + env(safe-area-inset-bottom));
+    text-align:center;font-size:11.5px;line-height:1.7;color:var(--dim2);
+  }
+  .linkbtn{
+    font-family:inherit;font-size:11.5px;font-weight:800;color:var(--accent);
+    background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline;
+  }
+  .linkbtn[aria-pressed="true"]{text-decoration:none;color:var(--dim2)}
+  .note .nimg{
+    display:block;width:100%;max-height:110px;object-fit:cover;object-position:top left;
+    margin:8px 0 0;border:1px solid var(--line);border-radius:10px;background:#ffffff;
+  }
+
+  /* ── 브리핑 탭 ──────────────────────────────── */
+  .brief{margin:12px 0 0}
+  .brief .top{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .brief .time{font-size:12.5px;font-weight:800;letter-spacing:-.1px}
+  .kind{
+    color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);
+  }
+  .kind.kr-close{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+  .kind.score-watch{background:rgba(163,91,0,.10);color:#a35b00;border-color:rgba(163,91,0,.26)}
+  .kind.news{background:rgba(31,87,201,.09);color:#1f57c9;border-color:rgba(31,87,201,.24)}
+  .kind.serv{background:rgba(106,63,196,.10);color:#6a3fc4;border-color:rgba(106,63,196,.24)}
+  [data-theme="dark"] .kind.score-watch{background:rgba(255,183,77,.13);color:#ffb74d;border-color:rgba(255,183,77,.30)}
+  [data-theme="dark"] .kind.news{background:rgba(107,155,255,.13);color:#8fb4ff;border-color:rgba(107,155,255,.30)}
+  [data-theme="dark"] .kind.serv{background:rgba(160,123,255,.14);color:#b39bff;border-color:rgba(160,123,255,.30)}
+  .brief .title{margin:6px 0 2px;font-size:14.5px;font-weight:800;letter-spacing:-.3px}
+  .brief ul.items{list-style:none;margin:4px 0 0;padding:0}
+  .brief ul.items li{
+    display:flex;align-items:flex-start;gap:9px;
+    padding:5px 0;font-size:13.5px;line-height:1.55;
+  }
+  .brief ul.items li .t{flex:1;min-width:0;cursor:pointer}
+  .brief ul.items li.off .t{color:var(--dim2);text-decoration:line-through}
+
+  /* ── 동기화 안내 한 줄 ─────────────────────── */
+  .syncbar{
+    display:flex;align-items:center;gap:10px;
+    margin:10px 14px 0;padding:9px 12px;
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    border-radius:var(--r-sm);
+    font-size:11.5px;line-height:1.5;color:var(--dim);
+  }
+  .syncbar span{flex:1;min-width:0}
+  .syncbar button{
+    flex:0 0 auto;font-family:inherit;font-size:11px;font-weight:800;
+    color:#fff;background:var(--accent);border:0;border-radius:9px;
+    padding:6px 9px;cursor:pointer;
+  }
+
+  /* ── 첫 연결 게이트 ────────────────────────── */
+  .gate{
+    position:fixed;inset:0;z-index:60;max-width:600px;margin:0 auto;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--bg);padding:24px;text-align:center;
+  }
+  .gatebox{width:100%;max-width:400px}
+  .gatebox .eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:10.5px;font-weight:700;letter-spacing:.9px;
+    color:var(--accent);text-transform:uppercase;
+  }
+  .gatebox .eyebrow i{
+    width:6px;height:6px;border-radius:50%;
+    background:linear-gradient(160deg,var(--accent),var(--accent-2));
+  }
+  .gtitle{margin:12px 0 8px;font-size:22px;font-weight:800;letter-spacing:-.7px;line-height:1.3}
+  .gtext{margin:0 0 20px;font-size:13.5px;line-height:1.72;color:var(--dim)}
+  .gbtn{
+    width:100%;height:48px;border:0;border-radius:14px;
+    background:var(--accent);color:#fff;font-family:inherit;
+    font-size:15px;font-weight:800;cursor:pointer;
+    transition:transform .12s ease, opacity .2s ease;
+  }
+  .gbtn:active{transform:scale(.98)}
+  .gbtn:disabled{opacity:.55;cursor:default}
+  .gnote{margin:14px 0 0;font-size:11px;line-height:1.65;color:var(--dim2)}
+  .glink{
+    margin-top:12px;padding:6px;background:none;border:0;
+    color:var(--dim);font-family:inherit;font-size:12px;
+    text-decoration:underline;cursor:pointer;
+  }
+  .gerr{margin:12px 0 0;font-size:12px;line-height:1.5;color:var(--accent)}
+
+  /* ── 설정 시트 ─────────────────────────────── */
+  .sheet{position:fixed;inset:0;z-index:70;background:rgba(10,12,16,.44);display:flex;align-items:flex-end;justify-content:center}
+  .sheetbox{
+    width:100%;max-width:600px;background:var(--card);
+    border-radius:18px 18px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));
+    box-shadow:var(--shadow);
+  }
+  .sheetbox h2{margin:0 0 14px}
+  .srow{display:flex;gap:10px;margin:0 0 9px;font-size:12.5px;line-height:1.5;color:var(--dim)}
+  .srow b{flex:0 0 82px;font-weight:700;color:var(--text)}
+  .srow span{flex:1;min-width:0}
+  .sbtn{
+    display:block;width:100%;text-align:left;margin:9px 0 0;
+    padding:11px 12px;border-radius:var(--r-sm);
+    border:1px solid var(--line);background:var(--fill);color:var(--text);
+    font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  }
+  .sinput{
+    width:100%;margin:2px 0 0;padding:11px 12px;
+    border:1px solid var(--line);border-radius:var(--r-sm);
+    background:var(--bg-soft);color:var(--text);
+    font-family:inherit;font-size:12.5px;
+  }
+  .sinput::placeholder{color:var(--dim2)}
+  .sout{
+    margin-top:16px;padding:6px 2px;background:none;border:0;
+    color:var(--dim2);font-family:inherit;font-size:11px;
+    text-decoration:underline;cursor:pointer;
+  }
+
+  /* ── 바닥 글 · 탭 ───────────────────────────── */
+  .foot{
+    margin:20px 2px 8px;text-align:center;
+    font-size:11px;line-height:1.7;color:var(--dim2);
+  }
+  .tabs{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    max-width:600px;margin:0 auto;
+    display:flex;align-items:center;gap:6px;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:var(--hdr);border-top:1px solid var(--line);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    backdrop-filter:saturate(180%) blur(14px);
+  }
+  .tab{
+    flex:1;height:38px;border:0;border-radius:13px;
+    background:transparent;font-size:13px;font-weight:700;color:var(--dim);
+    cursor:pointer;padding:0;
+  }
+  .tab.on{background:var(--accent-soft);color:var(--accent);font-weight:800}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="eyebrow"><i></i>VIBE NOTE · 개인판</div>
+    <h1>바이브 노트</h1>
+  </div>
+  <button class="theme" id="set-btn" type="button" aria-label="설정">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3.1"/>
+      <path d="M12 2.9v2.2M12 18.9v2.2M2.9 12h2.2M18.9 12h2.2M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/>
+    </svg>
+  </button>
+  <button class="theme" id="theme" type="button" aria-label="다크·라이트 전환">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 14.4A8.4 8.4 0 1 1 9.6 4a6.8 6.8 0 0 0 10.4 10.4z"/>
+    </svg>
+  </button>
+</div>
+
+<div class="syncbar" id="syncbar" hidden>
+  <span id="synctext"></span>
+  <button id="syncfix" type="button" hidden>다시 연결</button>
+</div>
+
+<main id="main">
+  <!-- ① 일정 -->
+  <section class="pane" id="pane-schedule">
+    <div id="open-card" hidden>
+      <section>
+        <h2>안 끝난 일 <span class="count" id="open-count">0</span></h2>
+        <ul class="open" id="open-list"></ul>
+      </section>
+    </div>
+
+    <section>
+      <h2>달력</h2>
+      <div class="cal">
+        <div class="calhead">
+          <button class="nav" id="sched-prev" type="button" aria-label="이전 달">‹</button>
+          <div class="ym" id="sched-ym"></div>
+          <button class="today-btn" id="sched-today" type="button">오늘</button>
+          <button class="nav" id="sched-next" type="button" aria-label="다음 달">›</button>
+        </div>
+        <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+        <div class="grid" id="sched-grid"></div>
+        <p class="legend" id="sched-cap"></p>
+      </div>
+    </section>
+
+    <section>
+      <h2>날짜별 기록</h2>
+      <article class="entry" id="day-card"></article>
+    </section>
+
+    <p class="foot">적은 기록은 내 구글 드라이브에 저장됩니다.<br>홈 화면에 추가하면 앱처럼 열립니다.</p>
+  </section>
+
+  <!-- ② 브리핑 -->
+  <section class="pane" id="pane-brief" hidden>
+    <div class="memhead">
+      <div class="memrow">
+        <h2>브리핑 <span class="count" id="brief-count">–</span></h2>
+      </div>
+      <div class="daterow">
+        <button class="nav" id="brief-prev" type="button" aria-label="이전 날">‹</button>
+        <button class="chip" id="brief-chip" type="button" aria-label="달력 펼치기">오늘</button>
+        <button class="nav" id="brief-next" type="button" aria-label="다음 날">›</button>
+      </div>
+    </div>
+
+    <div class="cal memo-cal" id="brief-cal" hidden>
+      <div class="calhead">
+        <button class="nav" id="brief-prev-m" type="button" aria-label="이전 달">‹</button>
+        <div class="ym" id="brief-ym"></div>
+        <button class="nav" id="brief-next-m" type="button" aria-label="다음 달">›</button>
+      </div>
+      <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+      <div class="grid" id="brief-grid"></div>
+    </div>
+
+    <div id="brief-list"></div>
+    <p class="foot" id="brief-foot">브리핑은 각자의 피클(AI 비서)이 채워 넣는 자리입니다.</p>
+  </section>
+
+  <!-- ③ 메모 -->
+  <section class="pane" id="pane-memo" hidden>
+    <div class="memhead">
+      <div class="memrow">
+        <h2>메모 <span class="count" id="memo-count">–</span></h2>
+        <button class="act" id="memo-new" type="button">＋ 새 메모</button>
+      </div>
+    </div>
+    <div id="memo-list"></div>
+    <p class="foot" id="memo-foot">메모는 내 구글 드라이브에 저장됩니다.<br>쓰는 대로 바로 저장됩니다.</p>
+  </section>
+</main>
+
+<!-- 메모 편집기 — 좁은 화면에서는 이 화면이 메모 탭의 첫 화면이다 -->
+<div class="editor" id="memo-editor" hidden>
+  <div class="edbar">
+    <button class="edbtn" id="ed-back" type="button">← 목록</button>
+    <span class="edwhen" id="ed-when"></span>
+    <button class="edbtn" id="ed-pen" type="button">✎ 손글씨</button>
+    <button class="edbtn" id="ed-del" type="button">삭제</button>
+  </div>
+  <div class="edconfirm" id="ed-confirm" hidden>
+    <span>이 메모를 지울까요?</span>
+    <button class="edbtn solid" id="ed-del-yes" type="button">지우기</button>
+    <button class="edbtn plain" id="ed-del-no" type="button">취소</button>
+  </div>
+  <div class="edbody">
+    <textarea id="ed-text" placeholder="여기에 그냥 쓰세요. 쓰는 대로 남습니다." aria-label="메모 본문"></textarea>
+    <img class="edimg" id="ed-img" alt="손글씨 그림" hidden>
+  </div>
+</div>
+
+<!-- 손글씨 — S펜으로 쓴 획이 그대로 남는다 -->
+<div class="draw" id="draw-panel" hidden>
+  <div class="edbar">
+    <button class="edbtn tool" id="draw-pen" type="button" aria-pressed="true">펜</button>
+    <button class="edbtn tool" id="draw-erase" type="button" aria-pressed="false">지우개</button>
+    <button class="edbtn" id="draw-undo" type="button">되돌리기</button>
+    <button class="edbtn" id="draw-clear" type="button">전체 지우기</button>
+    <button class="edbtn solid" id="draw-close" type="button">닫기</button>
+  </div>
+  <div class="canvaswrap" id="canvas-wrap"><canvas id="draw-canvas"></canvas></div>
+  <p class="drawhint" id="draw-hint">S펜으로 쓰세요. 손가락은 그리지 않습니다.
+    <button class="linkbtn" id="draw-any" type="button" aria-pressed="false">손가락·마우스도 허용</button>
+  </p>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button class="tab on" id="tab-schedule" type="button">일정</button>
+  <button class="tab" id="tab-brief" type="button">브리핑</button>
+  <button class="tab" id="tab-memo" type="button">메모</button>
+</nav>
+
+<!-- 첫 연결 — 이 한 번만 누르면 된다. 로그인 전에는 여기서 본문을 가린다. -->
+<div class="gate" id="gate" hidden>
+  <div class="gatebox">
+    <div class="eyebrow"><i></i>VIBE NOTE · 개인판</div>
+    <h2 class="gtitle">내 기록은<br>내 드라이브에</h2>
+    <p class="gtext">구글 계정으로 연결하면 이 노트의 기록이 내 구글 드라이브에 저장됩니다.
+      폰이든 PC든 같은 기록이 보이고, 다른 사람은 볼 수 없습니다.</p>
+    <button class="gbtn" id="gate-connect" type="button">구글 계정으로 연결</button>
+    <p class="gnote" id="gate-note">기록은 이 페이지가 아니라 내 드라이브에만 저장됩니다. 서버는 없습니다.</p>
+    <button class="glink" id="gate-cfg" type="button" hidden>구글 클라이언트 ID 넣기</button>
+    <button class="glink" id="gate-offline" type="button" hidden>이 기기에 마지막으로 저장된 기록 열기</button>
+    <p class="gerr" id="gate-err" hidden></p>
+  </div>
+</div>
+
+<!-- 설정 — 로그아웃은 여기 안쪽에 작게 -->
+<div class="sheet" id="settings" hidden>
+  <div class="sheetbox">
+    <h2>설정</h2>
+    <p class="srow"><b>연결</b><span id="set-who">아직 연결하지 않았습니다</span></p>
+    <p class="srow"><b>마지막 저장</b><span id="set-when">–</span></p>
+    <p class="srow"><b>이 기기 사본</b><span id="set-mirror">–</span></p>
+    <p class="srow"><b>클라이언트 ID</b><span id="set-cid">아직 없음</span></p>
+    <input class="sinput" id="set-cid-in" type="text" spellcheck="false" autocomplete="off"
+           placeholder="…apps.googleusercontent.com" aria-label="구글 클라이언트 ID">
+    <button class="sbtn" id="set-cid-save" type="button">이 ID 로 저장</button>
+    <button class="sbtn" id="set-sync" type="button">지금 동기화</button>
+    <button class="sbtn" id="set-import" type="button">공개판에 적힌 기록 가져오기</button>
+    <button class="sbtn" id="set-close" type="button">닫기</button>
+    <button class="sout" id="set-out" type="button">로그아웃</button>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer onload="if(window.__vnGis)window.__vnGis()"></script>
+<script id="app-js">
+(function () {
+  "use strict";
+
+  /* ══ 저장소 — 기록은 각자의 구글 드라이브 한 파일에 산다 ═════════════
+     한 JSON(DOC)에 공개판과 같은 다섯 키를 그대로 담는다.
+       vn-entries-v1         { "YYYY-MM-DD": {did:[], rules:[], decided:[], todos:[{t,done}]} }
+       vn-briefings-v1       { "YYYY-MM-DD": [{time, kind, title, items:[{text, tag}]}] }
+       vn-briefing-checks-v1 { "2026-11-22/07:00/0": true }
+       vn-notes-v1           [{id, text, created, updated, img?}]
+       vn-theme              "light" | "dark"
+     기기에는 DOC 사본(vnp-mirror-v1)과 기기 값(vnp-theme-local, vnp-device)만 둔다.
+     액세스 토큰은 메모리에만 둔다 — localStorage 에 토큰을 남기지 않는다. */
+  var DOC_KEYS = ["vn-entries-v1", "vn-briefings-v1", "vn-briefing-checks-v1", "vn-notes-v1", "vn-theme"];
+  var K_ENTRY = "vn-entries-v1", K_BRIEF = "vn-briefings-v1", K_BCHK = "vn-briefing-checks-v1",
+      K_NOTE = "vn-notes-v1", K_THEME = "vn-theme";
+  var MIRROR_KEY = "vnp-mirror-v1", THEME_KEY = "vnp-theme-local", DEVICE_KEY = "vnp-device";
+  var CID_KEY = "vnp-client-id";
+
+  var APP_ID = "vibe-note-private";
+  var FOLDER_NAME = "vibe-note", FILE_NAME = "바이브노트.json", BACKUP_HEAD = "바이브노트-백업-";
+  var CLIENT_ID = "__CLIENT_ID__";
+  var SCOPE = "https://www.googleapis.com/auth/drive.file";
+  var DRIVE_API = "https://www.googleapis.com/drive/v3";
+  var UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
+  var BOUND = "vibeboundary7f3a9c";
+  var SAVE_DELAY = 2500;
+
+  function lsGet(k) { try { return window.localStorage ? localStorage.getItem(k) : null; } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (window.localStorage) { localStorage.setItem(k, v); return true; } } catch (e) {} return false; }
+  function lsDel(k) { try { if (window.localStorage) localStorage.removeItem(k); } catch (e) {} }
+  function jget(k, fb) {
+    try {
+      var s = lsGet(k);
+      if (!s) return fb;
+      var o = JSON.parse(s);
+      return (o && typeof o === "object") ? o : fb;
+    } catch (e) { return fb; }
+  }
+  function objOr(v, fb) {
+    return (v && typeof v === "object" && Object.prototype.toString.call(v) !== "[object Array]") ? v : fb;
+  }
+  function nowIso() { return new Date().toISOString(); }
+  function tsOf(s) { var t = Date.parse(String(s || "")); return isNaN(t) ? 0 : t; }
+
+  function emptyDoc() {
+    var o = {};
+    o[K_ENTRY] = {}; o[K_BRIEF] = {}; o[K_BCHK] = {}; o[K_NOTE] = []; o[K_THEME] = null;
+    return o;
+  }
+  var DOC = emptyDoc();
+  var MIRROR = jget(MIRROR_KEY, null);
+  if (MIRROR && !MIRROR.data) MIRROR = null;
+
+  /* 앱 코드는 예전과 같은 readObj/writeObj 로 DOC 를 읽고 쓴다 — 저장 계층만 갈아 끼운다. */
+  function readObj(k, fb) {
+    if (Object.prototype.hasOwnProperty.call(DOC, k) && DOC[k] != null) return DOC[k];
+    return fb;
+  }
+  function writeObj(k, o) { DOC[k] = o; return touch(); }
+  function raw(k) { var v = DOC[k]; return (v == null) ? null : String(v); }
+  function setRaw(k, v) { DOC[k] = v; return touch(); }
+
+  var DB = { entries: readObj(K_ENTRY, {}), briefs: readObj(K_BRIEF, {}), notes: readObj(K_NOTE, []) };
+  var checks = readObj(K_BCHK, {});
+  function rebind() {
+    DB.entries = DOC[K_ENTRY]; DB.briefs = DOC[K_BRIEF]; DB.notes = DOC[K_NOTE];
+    checks = DOC[K_BCHK];
+  }
+
+  function deviceId() {
+    var d = lsGet(DEVICE_KEY);
+    if (!d) {
+      d = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      lsSet(DEVICE_KEY, d);
+    }
+    return d;
+  }
+
+  /* ══ 동기화 — 열 때 읽어 그리고, 고치면 몇 초 뒤 저장한다(저장 버튼 없음).
+     저장이 안 되면 기기에 남기고 위에 한 줄로 알린 뒤 다음 접속에 올린다.
+     다른 기기가 더 새 파일이면 새 쪽을 쓰고, 진 쪽 사본을 드라이브에 백업으로 남긴다. */
+  var Sync = {
+    mode: "locked",        /* locked | opening | live | offline | expired */
+    token: null, granted: false,
+    fileId: null, folderId: null,
+    baseUpdatedAt: null, localUpdatedAt: null,
+    dirty: false, busy: false, queued: false,
+    late: [], timer: null,
+    lastSyncedAt: null, note: "", lastError: "", silentTried: false
+  };
+  if (MIRROR && MIRROR.updatedAt) Sync.localUpdatedAt = MIRROR.updatedAt;
+  if (MIRROR && MIRROR.fileId) Sync.fileId = MIRROR.fileId;
+  if (MIRROR && MIRROR.base) Sync.baseUpdatedAt = MIRROR.base;
+  if (MIRROR && MIRROR.dirty) Sync.dirty = true;   /* 지난번에 못 올린 변경이 남아 있다 */
+
+  function authorized() { return !!Sync.token; }
+  /** 클라이언트 ID 는 비밀이 아니다 — 콘솔에서 만든 값을 설정에서 한 번 넣어 둘 수 있다. */
+  function clientId() {
+    var saved = lsGet(CID_KEY);
+    if (saved && saved.length > 20) return String(saved).replace(/\s/g, "");
+    return CLIENT_ID;
+  }
+  function configured() {
+    var c = clientId();
+    return !!c && c.indexOf("__") !== 0 && c.length > 20;
+  }
+  function saveClientId(v) {
+    var t = String(v || "").replace(/\s/g, "");
+    if (t.length < 20) return false;
+    lsSet(CID_KEY, t);
+    Sync.silentTried = false;
+    return true;
+  }
+
+  function saveMirror() {
+    if (!authorized() && Sync.mode !== "offline") return false;
+    var m = {
+      fileId: Sync.fileId || null,
+      updatedAt: Sync.localUpdatedAt || null,
+      dirty: !!Sync.dirty,
+      savedAt: nowIso(),
+      data: DOC
+    };
+    var ok = lsSet(MIRROR_KEY, JSON.stringify(m));
+    MIRROR = m;
+    return ok;
+  }
+
+  function touch() {
+    Sync.localUpdatedAt = nowIso();
+    Sync.dirty = true;
+    var ok = saveMirror();
+    schedule();
+    return ok;
+  }
+
+  function later(fn, ms) {
+    if (typeof setTimeout === "function") {
+      return setTimeout(fn, ms || SAVE_DELAY);
+    }
+    Sync.late.push(fn);
+    return null;
+  }
+  function flushLate() {
+    var q = Sync.late;
+    Sync.late = [];
+    for (var i = 0; i < q.length; i++) { try { q[i](); } catch (e) {} }
+  }
+  function schedule() {
+    if (!authorized()) { renderStatus(); return; }
+    if (Sync.timer) { try { if (typeof clearTimeout === "function") clearTimeout(Sync.timer); } catch (e) {} }
+    Sync.timer = later(function () { Sync.timer = null; flushLate(); push({}); }, SAVE_DELAY);
+    renderStatus();
+  }
+
+  /* ── HTTP ─────────────────────────────────── */
+  function xhr(o, cb) {
+    var x = null;
+    try { x = new XMLHttpRequest(); } catch (e) { return cb(e); }
+    try {
+      x.open(o.method, o.url, true);
+      var h = o.headers || {};
+      for (var k in h) if (Object.prototype.hasOwnProperty.call(h, k)) x.setRequestHeader(k, h[k]);
+      x.onload = function () { cb(null, x.status, x.responseText || ""); };
+      x.onerror = function () { cb(new Error("network")); };
+      x.ontimeout = function () { cb(new Error("timeout")); };
+      x.send(o.body == null ? null : o.body);
+    } catch (e) { cb(e); }
+  }
+  function apiError(status, body) {
+    var e = new Error("drive " + status);
+    e.status = status;
+    e.body = String(body || "").slice(0, 400);
+    if (status === 401) e.auth = true;
+    return e;
+  }
+  function drive(o, cb) {
+    var headers = { Authorization: "Bearer " + Sync.token };
+    if (o.json) headers["Content-Type"] = "application/json; charset=UTF-8";
+    xhr({ method: o.method, url: (o.upload ? UPLOAD_API : DRIVE_API) + o.path, headers: headers, body: o.body },
+      function (e, st, txt) {
+        if (e) return cb(e);
+        var j = null;
+        try { j = txt ? JSON.parse(txt) : null; } catch (err) { j = null; }
+        if (st >= 200 && st < 300) return cb(null, j, txt);
+        cb(apiError(st, txt));
+      });
+  }
+
+  /* ── 구글 로그인 (GIS 토큰) ─────────────────── */
+  function gis() {
+    try { return (window.google && google.accounts && google.accounts.oauth2) ? google.accounts.oauth2 : null; } catch (e) { return null; }
+  }
+  /** silent=true 면 화면 없이 갱신을 시도한다. 실패하면 게이트에서 한 번 누르면 된다. */
+  function askToken(silent, cb) {
+    var g = gis();
+    if (!g || !configured()) return cb(new Error("not_ready"));
+    var done = false;
+    function finish(err, tok) { if (done) return; done = true; cb(err, tok); }
+    try {
+      var tc = g.initTokenClient({
+        client_id: clientId(),
+        scope: SCOPE,
+        prompt: silent ? "" : "consent",
+        callback: function (resp) {
+          if (resp && resp.access_token) { Sync.granted = true; finish(null, resp.access_token); }
+          else finish(new Error((resp && resp.error) || "no_token"));
+        },
+        error_callback: function (err) { finish(new Error((err && err.type) || "auth")); }
+      });
+      tc.requestAccessToken();
+    } catch (e) { finish(e); }
+  }
+
+  function connect() {
+    if (!configured()) { gateError("이 페이지에는 아직 구글 클라이언트 ID 가 없습니다. 관리자에게 알려 주세요."); return; }
+    gateError("");
+    setGateBusy(true);
+    askToken(false, function (e, tok) {
+      setGateBusy(false);
+      if (e || !tok) { gateError("연결하지 못했습니다. 잠시 뒤 다시 눌러 주세요."); return; }
+      start(tok);
+    });
+  }
+
+  function start(tok) {
+    Sync.token = tok;
+    Sync.mode = "opening";
+    Sync.lastError = "";
+    Sync.note = "";
+    renderStatus();
+    gateError("");
+    pull({ open: true });
+  }
+
+  function trySilent() {
+    if (Sync.silentTried || authorized() || !configured()) return;
+    Sync.silentTried = true;
+    askToken(true, function (e, tok) { if (tok) start(tok); });
+  }
+
+  /* ── 드라이브 ──────────────────────────────── */
+  function ensureFolder(cb) {
+    if (Sync.folderId) return cb(null, Sync.folderId);
+    var q = "name = '" + FOLDER_NAME + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+    drive({ method: "GET", path: "/files?spaces=drive&fields=files(id,name)&q=" + encodeURIComponent(q) }, function (e, j) {
+      if (e) return cb(e);
+      var f = j && j.files && j.files[0];
+      if (f && f.id) { Sync.folderId = f.id; return cb(null, f.id); }
+      drive({ method: "POST", path: "/files?fields=id", json: true,
+              body: JSON.stringify({ name: FOLDER_NAME, mimeType: "application/vnd.google-apps.folder" }) },
+        function (e2, j2) {
+          if (e2) return cb(e2);
+          Sync.folderId = (j2 && j2.id) || null;
+          cb(null, Sync.folderId);
+        });
+    });
+  }
+  function findDoc(cb) {
+    ensureFolder(function (e, fid) {
+      if (e) return cb(e);
+      var q = "name = '" + FILE_NAME + "' and '" + fid + "' in parents and trashed = false";
+      drive({ method: "GET", path: "/files?spaces=drive&fields=files(id,name,modifiedTime)&q=" + encodeURIComponent(q) },
+        function (e2, j) {
+          if (e2) return cb(e2);
+          cb(null, (j && j.files && j.files[0]) || null);
+        });
+    });
+  }
+  function multipart(meta, payload) {
+    return "--" + BOUND + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(meta) +
+      "\r\n--" + BOUND + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(payload) +
+      "\r\n--" + BOUND + "--";
+  }
+  function uploadAs(name, payload, fileId, cb) {
+    var meta = { name: name, mimeType: "application/json" };
+    if (!fileId) meta.parents = [Sync.folderId];
+    var path = "/files" + (fileId ? "/" + encodeURIComponent(fileId) : "") + "?uploadType=multipart&fields=id,modifiedTime";
+    drive({ method: fileId ? "PATCH" : "POST", path: path, upload: true,
+            body: multipart(meta, payload) }, cb);
+  }
+
+  /* ── 문서 모양 ─────────────────────────────── */
+  function buildDoc(iso, dev) {
+    var data = {};
+    for (var i = 0; i < DOC_KEYS.length; i++) {
+      var k = DOC_KEYS[i], v = DOC[k];
+      if (k === K_NOTE) data[k] = list(v);
+      else if (k === K_THEME) data[k] = (v === "dark" || v === "light") ? v : "light";
+      else data[k] = objOr(v, {});
+    }
+    return { app: APP_ID, version: 1, updatedAt: iso || nowIso(), device: dev || deviceId(), data: data };
+  }
+  /** 드라이브에서 온 파일을 믿을 수 있는 모양으로 — data 가 없으면 다섯 키만 있는 옛 모양도 받는다. */
+  function saneDoc(j, txt) {
+    var o = j;
+    if (!o && txt) { try { o = JSON.parse(txt); } catch (e) { o = null; } }
+    if (!o || typeof o !== "object") return null;
+    var d = objOr(o.data, null);
+    if (!d) {
+      var bare = {};
+      for (var i = 0; i < DOC_KEYS.length; i++) if (o[DOC_KEYS[i]] != null) bare[DOC_KEYS[i]] = o[DOC_KEYS[i]];
+      d = bare;
+    }
+    return { app: o.app || "", updatedAt: typeof o.updatedAt === "string" ? o.updatedAt : "", device: o.device || "", data: d };
+  }
+  function hasData(d) {
+    if (!d) return false;
+    var e = objOr(d[K_ENTRY], {}), b = objOr(d[K_BRIEF], {}), c = objOr(d[K_BCHK], {}), n = list(d[K_NOTE]);
+    return !!(Object.keys(e).length || Object.keys(b).length || Object.keys(c).length || n.length ||
+              d[K_THEME] === "dark" || d[K_THEME] === "light");
+  }
+
+  function setDoc(d) {
+    DOC = emptyDoc();
+    for (var i = 0; i < DOC_KEYS.length; i++) if (d && d[DOC_KEYS[i]] != null) DOC[DOC_KEYS[i]] = d[DOC_KEYS[i]];
+    DOC[K_ENTRY] = objOr(DOC[K_ENTRY], {});
+    DOC[K_BRIEF] = objOr(DOC[K_BRIEF], {});
+    DOC[K_BCHK] = objOr(DOC[K_BCHK], {});
+    DOC[K_NOTE] = list(DOC[K_NOTE]);
+    if (DOC[K_THEME] !== "dark" && DOC[K_THEME] !== "light") DOC[K_THEME] = null;
+    rebind();
+  }
+  /** 아직 못 올린 이 기기 사본을 화면과 DOC 로 올린다(올리기 전에 내 것을 먼저 세운다). */
+  function hydrateLocal() {
+    if (!MIRROR || !MIRROR.data) return false;
+    setDoc(MIRROR.data);
+    return true;
+  }
+
+  function adopt(doc) {
+    setDoc((doc && doc.data) || null);
+    Sync.baseUpdatedAt = (doc && doc.updatedAt) || null;
+    Sync.localUpdatedAt = Sync.baseUpdatedAt;
+    Sync.dirty = false;
+    Sync.lastSyncedAt = nowIso();
+    Sync.mode = "live";
+    if (DOC[K_THEME]) { applyTheme(DOC[K_THEME]); lsSet(THEME_KEY, DOC[K_THEME]); }
+    saveMirror();
+    unlock();
+    renderStatus();
+  }
+
+  function push(ctx) {
+    ctx = ctx || {};
+    if (!Sync.token) return;
+    if (Sync.busy) { Sync.queued = true; return; }
+    if (!Sync.dirty && !ctx.force && !ctx.first) { renderStatus(); return; }
+    Sync.busy = true;
+    var doc = buildDoc(nowIso(), deviceId());
+    ensureFolder(function (e, fid) {
+      if (e) { Sync.busy = false; return fail(e); }
+      uploadAs(FILE_NAME, doc, Sync.fileId, function (e2, j) {
+        Sync.busy = false;
+        if (e2) return fail(e2);
+        if (j && j.id) Sync.fileId = j.id;
+        Sync.baseUpdatedAt = doc.updatedAt;
+        Sync.localUpdatedAt = doc.updatedAt;
+        Sync.dirty = false;
+        Sync.lastSyncedAt = nowIso();
+        Sync.note = "";
+        saveMirror();
+        if (Sync.mode !== "live" || ($.gate && !$.gate.hidden)) { Sync.mode = "live"; unlock(); }
+        else renderStatus();
+        if (Sync.queued) { Sync.queued = false; if (Sync.dirty) push({}); }
+      });
+    });
+  }
+
+  function pull(ctx) {
+    ctx = ctx || {};
+    if (!Sync.token) return;
+    if (Sync.busy) { Sync.queued = true; return; }
+    Sync.busy = true;
+    findDoc(function (e, f) {
+      if (e) { Sync.busy = false; return fail(e, ctx); }
+      if (!f) {
+        /* 아직 파일이 없다 — 이 계정의 첫 연결이면 빈 문서를 만들어 둔다. */
+        Sync.fileId = null;
+        Sync.busy = false;
+        push({ first: true });
+        return;
+      }
+      Sync.fileId = f.id;
+      drive({ method: "GET", path: "/files/" + encodeURIComponent(f.id) + "?alt=media" }, function (e2, j, txt) {
+        Sync.busy = false;
+        if (e2) return fail(e2, ctx);
+        var remote = saneDoc(j, txt);
+        if (!remote) {
+          Sync.mode = "live";
+          unlock();
+          say("드라이브 파일을 읽지 못했습니다. 이 기기 기록으로 계속 씁니다.", true);
+          return;
+        }
+        var pending = Sync.dirty && MIRROR && hasData(MIRROR.data);
+        if (!pending) { adopt(remote); return; }
+        hydrateLocal();   /* 비교하고 올릴 것은 이 기기에 남은 기록이다 */
+        var cmp = tsOf(Sync.localUpdatedAt) - tsOf(remote.updatedAt);
+        if (cmp > 0) {
+          backupDoc(remote, function () { Sync.dirty = true; push({ force: true }); });
+        } else if (cmp < 0) {
+          var lost = buildDoc(Sync.localUpdatedAt || nowIso(), deviceId());
+          backupDoc(lost, function () {
+            adopt(remote);
+            say("다른 기기 기록이 더 최신이라 그쪽으로 맞췄습니다. 이 기기 사본은 드라이브에 백업해 두었습니다.");
+          });
+        } else {
+          adopt(remote);
+        }
+      });
+    });
+  }
+
+  function backupName(iso) {
+    var d = iso ? new Date(iso) : new Date();
+    if (isNaN(d.getTime())) d = new Date();
+    return BACKUP_HEAD + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" +
+      pad(d.getHours()) + pad(d.getMinutes()) + ".json";
+  }
+  function backupDoc(doc, cb) {
+    ensureFolder(function (e, fid) {
+      if (e) { if (cb) cb(e); return; }
+      var payload = (doc && doc.data) ? doc : buildDoc(nowIso(), deviceId());
+      uploadAs(backupName(payload.updatedAt), payload, null, function () { if (cb) cb(null); });
+    });
+  }
+
+  function fail(e, ctx) {
+    Sync.lastError = (e && e.message) || "error";
+    if (ctx && ctx.first) Sync.dirty = true;   /* 첫 파일을 못 만들었으면 다음에 다시 */
+    if (e && e.auth) {
+      Sync.token = null;
+      Sync.mode = "expired";
+      say("연결이 만료되었습니다. 다시 연결하면 이어서 저장합니다.", true);
+      renderStatus();
+      return;
+    }
+    if (!authorized()) {
+      Sync.mode = MIRROR ? "offline" : "locked";
+    } else {
+      Sync.mode = "offline";
+    }
+    saveMirror();
+    if (MIRROR && hasData(MIRROR.data) && (ctx && ctx.open)) {
+      adopt(MIRROR.data ? { data: MIRROR.data, updatedAt: MIRROR.updatedAt } : null);
+      Sync.dirty = true;
+      Sync.mode = "offline";
+    }
+    say("드라이브에 저장하지 못했습니다. 이 기기에 남겨 두었고, 연결되면 올립니다.", true);
+    renderStatus();
+  }
+
+  /* ══ 날짜 ════════════════════════════════════ */
+  var DOW = ["일", "월", "화", "수", "목", "금", "토"];
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function ymd(y, m, d) { return y + "-" + pad(m) + "-" + pad(d); }
+  function keyOf(d) { return ymd(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+  function parts(k) { var p = String(k).split("-"); return { y: +p[0], m: +p[1], d: +p[2] }; }
+  function todayKey() { return keyOf(new Date()); }
+  function shiftKey(k, n) {
+    var p = parts(k);
+    return keyOf(new Date(p.y, p.m - 1, p.d + n));
+  }
+  function labelOf(k) {
+    var p = parts(k);
+    return p.m + "월 " + p.d + "일 (" + DOW[new Date(p.y, p.m - 1, p.d).getDay()] + ")";
+  }
+  function shortOf(k) { var p = parts(k); return pad(p.m) + "-" + pad(p.d); }
+  function nowTime() { var d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+
+  /* ══ 기록 다루기 ═════════════════════════════ */
+  function list(v) { return Object.prototype.toString.call(v) === "[object Array]" ? v : []; }
+  var SECS = ["did", "rules", "decided", "todos"];
+  function rec(k) {
+    var r = DB.entries[k] || {};
+    return { did: list(r.did), rules: list(r.rules), decided: list(r.decided), todos: list(r.todos) };
+  }
+  function isEmpty(r) {
+    return !(r.did.length || r.rules.length || r.decided.length || r.todos.length);
+  }
+  function saveRec(k, r) {
+    if (!r || isEmpty(r)) delete DB.entries[k];
+    else DB.entries[k] = r;
+    writeObj(K_ENTRY, DB.entries);
+  }
+  function hasRec(k) { return !isEmpty(rec(k)); }
+  /* 브리핑 — 날짜별 {time, kind, title, items:[{text, tag}]} */
+  var KIND_LABEL = {
+    "us-close": "미장 마감", "kr-close": "국장 마감",
+    "pre-open": "개장 전", "us-open": "미장 개장", "note": "메모",
+    "score-watch": "점수 감시", "news": "속보", "serv": "종목 감시"
+  };
+  function briefsOf(k) { return list(DB.briefs[k]); }
+  function bkey(k, time, i) { return k + "/" + time + "/" + i; }
+  function bchk(k, time, i) { return !!checks[bkey(k, time, i)]; }
+  function setBchk(k, time, i, v) {
+    var key = bkey(k, time, i);
+    if (v) checks[key] = true; else delete checks[key];
+    writeObj(K_BCHK, checks);
+  }
+
+  function addLine(k, sec, text) {
+    var t = String(text == null ? "" : text).replace(/^\s+|\s+$/g, "");
+    if (!t) return false;
+    var r = rec(k);
+    if (SECS.indexOf(sec) < 0) sec = "did";
+    if (sec === "todos") r.todos.push({ t: t, done: false });
+    else r[sec].push({ t: t });
+    saveRec(k, r);
+    return true;
+  }
+  function dropLine(k, sec, i) {
+    var r = rec(k);
+    if (!list(r[sec]).length) return;
+    r[sec].splice(i, 1);
+    saveRec(k, r);
+  }
+  function toggleTodo(k, i, on) {
+    var r = rec(k);
+    if (i < 0 || i >= r.todos.length) return;
+    r.todos[i].done = !!on;
+    saveRec(k, r);
+  }
+
+  /* ══ 화면 — 잠금·연결·상태 ══════════════════════════════════════
+     로그인 전에는 빈 상태다: 본문과 탭을 가리고 게이트만 둔다.
+     누구든 같은 주소를 열어 자기 구글 계정으로 연결하면 자기 드라이브의 기록만 본다. */
+  function applyClientId() {
+    var v = $.setCidIn ? $.setCidIn.value : "";
+    if (!saveClientId(v)) {
+      gateError("클라이언트 ID 를 다시 확인해 주세요.");
+      say("클라이언트 ID 를 다시 확인해 주세요.");
+      return false;
+    }
+    if ($.setCidIn) $.setCidIn.value = "";
+    renderSettings();
+    applyClientIdNote();
+    return true;
+  }
+  function applyClientIdNote() {
+    gateError(configured() ? "" : "클라이언트 ID 를 먼저 넣어 주세요.");
+  }
+
+  function setGateBusy(on) {
+    var b = $.gateConnect;
+    if (!b) return;
+    b.disabled = !!on;
+    b.textContent = on ? "연결하는 중…" : "구글 계정으로 연결";
+  }
+  function gateError(msg) {
+    var e = $.gateErr;
+    if (!e) return;
+    e.textContent = msg || "";
+    e.hidden = !msg;
+  }
+  function lock() {
+    if ($.gate) $.gate.hidden = false;
+    if ($.main) $.main.hidden = true;
+    if ($.tabs) $.tabs.hidden = true;
+    Sync.mode = Sync.mode === "offline" ? "offline" : (authorized() ? Sync.mode : "locked");
+    var off = $.gateOffline;
+    if (off) {
+      var has = !!(MIRROR && hasData(MIRROR.data));
+      var down = false;
+      try { down = (navigator.onLine === false); } catch (e) { down = false; }
+      off.hidden = !(has && down);
+    }
+    setGateBusy(Sync.mode === "opening");
+    renderSettings();
+    renderStatus();
+  }
+  function unlock() {
+    if ($.gate) $.gate.hidden = true;
+    if ($.main) $.main.hidden = false;
+    if ($.tabs) $.tabs.hidden = false;
+    renderAll();
+    renderStatus();
+    renderSettings();
+  }
+
+  function say(msg, sticky) {
+    Sync.note = msg || "";
+    Sync.noteSticky = !!sticky;
+    renderStatus();
+  }
+  function renderStatus() {
+    var bar = $.syncbar, tx = $.synctext, fix = $.syncfix;
+    if (!bar) return;
+    var msg = "";
+    if (!authorized() && Sync.mode !== "offline") {
+      msg = "";
+    } else if (Sync.mode === "offline") {
+      msg = Sync.note || "오프라인 — 이 기기에 저장 중입니다. 연결되면 올라갑니다.";
+    } else if (Sync.mode === "expired") {
+      msg = "연결이 만료되었습니다. 다시 연결하면 이어서 저장합니다.";
+    } else if (Sync.note) {
+      msg = Sync.note;
+    } else if (Sync.dirty) {
+      msg = "저장하는 중…";
+    }
+    bar.hidden = !msg;
+    if (tx) tx.textContent = msg;
+    if (fix) fix.hidden = !(Sync.mode === "expired" || Sync.mode === "offline");
+  }
+
+  /* ══ 설정 — 로그아웃은 여기 안쪽에 작게 ══════════════════════ */
+  function openSettings() {
+    renderSettings();
+    if ($.settings) $.settings.hidden = false;
+  }
+  function closeSettings() { if ($.settings) $.settings.hidden = true; }
+  function renderSettings() {
+    if ($.setWho) {
+      if (authorized()) $.setWho.textContent = "구글 드라이브에 연결됨";
+      else if (Sync.mode === "offline") $.setWho.textContent = "오프라인 (이 기기에만 저장)";
+      else if (Sync.mode === "expired") $.setWho.textContent = "연결 만료 — 다시 연결 필요";
+      else $.setWho.textContent = "아직 연결하지 않았습니다";
+    }
+    if ($.setWhen) {
+      $.setWhen.textContent = Sync.lastSyncedAt ? whenLabel(new Date(Sync.lastSyncedAt).getTime()) : "–";
+    }
+    if ($.setMirror) {
+      var m = "없음";
+      if (MIRROR && MIRROR.savedAt) {
+        m = whenLabel(new Date(MIRROR.savedAt).getTime());
+        if (MIRROR.dirty) m += " · 올리지 못한 변경 있음";
+      }
+      $.setMirror.textContent = m;
+    }
+    if ($.setOut) $.setOut.hidden = !authorized();
+    if ($.setCid) $.setCid.textContent = configured() ? "넣었습니다" : "아직 없음";
+    if ($.gateCfg) $.gateCfg.hidden = configured();
+  }
+  function signOut() {
+    Sync.token = null;   /* 이 기기에서만 잊는다 — 계정 권한은 건드리지 않는다 */
+    Sync.mode = "locked";
+    Sync.note = "";
+    DOC = emptyDoc();
+    rebind();
+    closeSettings();
+    renderAll();
+    lock();
+  }
+
+  /* 공개판(같은 github.io)에 적어 둔 기록이 있으면 이 드라이브로 가져온다.
+     공개판의 저장 키(vn-*)는 읽기만 하고 지우지 않는다. */
+  function importPublic() {
+    var got = 0;
+    function num(o) { return o && typeof o === "object" ? Object.keys(o).length : 0; }
+    var map = [[K_ENTRY, "e"], [K_BRIEF, "b"], [K_BCHK, "c"], [K_NOTE, "n"]];
+    for (var i = 0; i < map.length; i++) {
+      var k = map[i][0], s = lsGet(k);
+      if (!s) continue;
+      var o = null;
+      try { o = JSON.parse(s); } catch (e) { o = null; }
+      if (!o) continue;
+      if (k === K_NOTE) {
+        var have = list(DOC[K_NOTE]), ids = {};
+        for (var a = 0; a < have.length; a++) ids[have[a] && have[a].id] = 1;
+        var add = list(o).filter(function (x) { return x && !ids[x.id]; });
+        if (add.length) { DOC[K_NOTE] = have.concat(add); got += add.length; }
+      } else {
+        var cur = objOr(DOC[k], {}), n = 0;
+        Object.keys(o).forEach(function (kk) { if (cur[kk] == null) { cur[kk] = o[kk]; n++; } });
+        if (n) { DOC[k] = cur; got += n; }
+      }
+    }
+    if (!got) { say("공개판에 적힌 기록을 찾지 못했습니다."); return; }
+    rebind();
+    touch();
+    renderAll();
+    closeSettings();
+    say("공개판에 적힌 기록 " + got + "건을 가져왔습니다.");
+  }
+
+  /* ══ 화면 요소 ═══════════════════════════════ */
+  function id(x) { return document.getElementById(x); }
+  var $ = {
+    theme: id("theme"), setBtn: id("set-btn"),
+    gate: id("gate"), gateConnect: id("gate-connect"), gateOffline: id("gate-offline"), gateErr: id("gate-err"),
+    main: id("main"), tabs: id("tabs"),
+    syncbar: id("syncbar"), synctext: id("synctext"), syncfix: id("syncfix"),
+    settings: id("settings"), setWho: id("set-who"), setWhen: id("set-when"), setMirror: id("set-mirror"),
+    setCid: id("set-cid"), setCidIn: id("set-cid-in"), setCidSave: id("set-cid-save"), gateCfg: id("gate-cfg"),
+    setSync: id("set-sync"), setImport: id("set-import"), setClose: id("set-close"), setOut: id("set-out"),
+    notice: id("notice"), noticeClear: id("notice-clear"),
+    paneS: id("pane-schedule"), paneB: id("pane-brief"), paneM: id("pane-memo"),
+    tabS: id("tab-schedule"), tabB: id("tab-brief"), tabM: id("tab-memo"),
+    openCard: id("open-card"), openCount: id("open-count"), openList: id("open-list"),
+    schedPrev: id("sched-prev"), schedNext: id("sched-next"), schedToday: id("sched-today"),
+    schedYm: id("sched-ym"), schedGrid: id("sched-grid"), schedCap: id("sched-cap"),
+    dayCard: id("day-card"),
+    briefChip: id("brief-chip"), briefPrev: id("brief-prev"), briefNext: id("brief-next"),
+    briefCal: id("brief-cal"), briefYm: id("brief-ym"), briefGrid: id("brief-grid"),
+    briefPrevM: id("brief-prev-m"), briefNextM: id("brief-next-m"),
+    briefCount: id("brief-count"), briefList: id("brief-list"),
+    memoCount: id("memo-count"), memoNew: id("memo-new"), memoList: id("memo-list"),
+    memoEditor: id("memo-editor"), edBack: id("ed-back"), edWhen: id("ed-when"),
+    edDel: id("ed-del"), edConfirm: id("ed-confirm"),
+    edDelYes: id("ed-del-yes"), edDelNo: id("ed-del-no"), edText: id("ed-text"),
+    edPen: id("ed-pen"), edImg: id("ed-img"),
+    drawPanel: id("draw-panel"), drawCanvas: id("draw-canvas"), canvasWrap: id("canvas-wrap"),
+    drawPen: id("draw-pen"), drawErase: id("draw-erase"), drawUndo: id("draw-undo"),
+    drawClear: id("draw-clear"), drawClose: id("draw-close"), drawHint: id("draw-hint"),
+    drawAny: id("draw-any")
+  };
+
+  var S = {
+    tab: "schedule",
+    schedDate: todayKey(), schedY: 0, schedM: 0,
+    briefDate: todayKey(), briefY: 0, briefM: 0, briefCalOpen: false,
+    edId: null,
+    addSec: "did", draft: ""
+  };
+  (function () {
+    var p = parts(S.schedDate); S.schedY = p.y; S.schedM = p.m;
+    p = parts(S.briefDate); S.briefY = p.y; S.briefM = p.m;
+  })();
+
+  /* ══ 작은 도우미 ═════════════════════════════ */
+  function E(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = String(txt);
+    return n;
+  }
+  function clear(n) { if (n) n.textContent = ""; }
+  function btn(cls, txt, aria) {
+    var b = document.createElement("button");
+    b.type = "button";
+    if (cls) b.className = cls;
+    if (txt != null) b.textContent = String(txt);
+    if (aria) b.setAttribute("aria-label", aria);
+    return b;
+  }
+  function on(n, type, fn) { if (n) n.addEventListener(type, fn); }
+
+  /* ══ 테마 ════════════════════════════════════ */
+  function applyTheme(t) { document.documentElement.setAttribute("data-theme", t); }
+  on($.theme, "click", function () {
+    var now = document.documentElement.getAttribute("data-theme");
+    var next = now === "dark" ? "light" : "dark";
+    applyTheme(next);
+    lsSet(THEME_KEY, next);
+    setRaw(K_THEME, next);
+  });
+
+  /* ══ 탭 ══════════════════════════════════════ */
+  function setTab(t) {
+    S.tab = (t === "memo" || t === "brief") ? t : "schedule";
+    var s = S.tab === "schedule", b = S.tab === "brief", m = S.tab === "memo";
+    if ($.paneS) $.paneS.hidden = !s;
+    if ($.paneB) $.paneB.hidden = !b;
+    if ($.paneM) $.paneM.hidden = !m;
+    if ($.tabS) $.tabS.className = "tab" + (s ? " on" : "");
+    if ($.tabB) $.tabB.className = "tab" + (b ? " on" : "");
+    if ($.tabM) $.tabM.className = "tab" + (m ? " on" : "");
+    if (b && S.briefCalOpen) renderBriefCal();
+    if (m && narrowScreen() && $.memoEditor && $.memoEditor.hidden) openMemo(null);
+  }
+  on($.tabS, "click", function () { setTab("schedule"); });
+  on($.tabB, "click", function () { setTab("brief"); });
+  on($.tabM, "click", function () { setTab("memo"); });
+
+  /* ══ 달력 그리기 ═════════════════════════════ */
+  function paintCal(o) {
+    if (!o.grid) return;
+    clear(o.grid);
+    if (o.ym) o.ym.textContent = o.y + "년 " + o.m + "월";
+    var days = new Date(o.y, o.m, 0).getDate();
+    var start = new Date(o.y, o.m - 1, 1).getDay();
+    var i, k, cell;
+    for (i = 0; i < start; i++) o.grid.appendChild(E("div", "cell empty"));
+    for (i = 1; i <= days; i++) {
+      k = ymd(o.y, o.m, i);
+      var has = !!o.has(k);
+      cell = btn("cell" + (has ? " has" : "") + (k === todayKey() ? " today" : "") +
+                 (k === o.sel ? " sel" : ""), String(i));
+      cell.setAttribute("data-date", k);
+      if (has) cell.appendChild(document.createElement("small"));
+      if (o.sel === k) cell.setAttribute("aria-current", "date");
+      (function (key) {
+        on(cell, "click", function () { o.pick(key); });
+      })(k);
+      o.grid.appendChild(cell);
+    }
+  }
+
+  /* ══ 일정 · 안 끝난 일 ═══════════════════════ */
+  function renderOpen() {
+    if (!$.openList) return;
+    var keys = Object.keys(DB.entries).sort();
+    var items = [];
+    keys.forEach(function (k) {
+      var r = rec(k);
+      r.todos.forEach(function (it, i) {
+        if (!it.done) items.push({ k: k, i: i, t: it.t });
+      });
+    });
+    clear($.openList);
+    if ($.openCount) {
+      $.openCount.textContent = items.length ? items.length + "건" : "없음";
+      $.openCount.className = "count" + (items.length ? "" : " zero");
+    }
+    if ($.openCard) $.openCard.hidden = !items.length;
+    items.forEach(function (it) {
+      var li = E("li");
+      li.appendChild(E("span", "txt", it.t));
+      var j = btn("jump", shortOf(it.k), it.k + " 기록 열기");
+      on(j, "click", function () { pickScheduleDate(it.k); });
+      li.appendChild(j);
+      $.openList.appendChild(li);
+    });
+  }
+
+  /* ══ 일정 · 날짜별 기록 ══════════════════════ */
+  function sectionOf(r, sec) { return list(r[sec]); }
+
+  function lineList(k, sec, items, numbered) {
+    var ul = E("ul", "lines");
+    if (!items.length) {
+      ul.appendChild(E("li", "none", "아직 없음"));
+      return ul;
+    }
+    items.forEach(function (it, i) {
+      var li = E("li");
+      if (numbered) li.appendChild(E("span", "num", String(i + 1)));
+      li.appendChild(E("span", "t", it.t));
+      if (it.ex) li.appendChild(E("span", "ex", "예시"));
+      var x = btn("x", "×", "이 줄 지우기");
+      on(x, "click", function () { dropLine(k, sec, i); renderDay(); renderOpen(); });
+      li.appendChild(x);
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  function todoList(k, items) {
+    var ul = E("ul", "todo");
+    if (!items.length) {
+      ul.appendChild(E("li", "none", "아직 없음"));
+      return ul;
+    }
+    items.forEach(function (it, i) {
+      var li = E("li");
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!it.done;
+      cb.setAttribute("aria-label", it.t);
+      var sp = E("span", "t" + (it.done ? " done" : ""), it.t);
+      on(cb, "change", function () {
+        toggleTodo(k, i, cb.checked);
+        renderDay(); renderOpen();
+      });
+      on(sp, "click", function () {
+        var v = !it.done;
+        cb.checked = v;
+        toggleTodo(k, i, v);
+        renderDay(); renderOpen();
+      });
+      li.appendChild(cb);
+      li.appendChild(sp);
+      if (it.ex) li.appendChild(E("span", "ex", "예시"));
+      var x = btn("x", "×", "이 줄 지우기");
+      on(x, "click", function () { dropLine(k, "todos", i); renderDay(); renderOpen(); });
+      li.appendChild(x);
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  var SEC_LABEL = { did: "한 일", rules: "쓴 기준", decided: "결정한 것", todos: "해야 할 거" };
+  var SEC_PH = {
+    did: "한 일에 한 줄 추가", rules: "쓴 기준에 한 줄 추가",
+    decided: "결정한 것에 한 줄 추가", todos: "해야 할 거에 한 줄 추가"
+  };
+
+  function renderDay() {
+    var box = $.dayCard;
+    if (!box) return;
+    var k = S.schedDate, r = rec(k);
+    clear(box);
+
+    var head = E("div", "dayhead");
+    head.appendChild(E("h3", null, labelOf(k)));
+    var total = r.todos.length, done = 0;
+    r.todos.forEach(function (it) { if (it.done) done++; });
+    if (total) {
+      head.appendChild(E("span", "badge" + (done === total ? " done" : ""), done + "/" + total));
+    }
+    box.appendChild(head);
+
+    var t0 = todayKey(), rel = "";
+    if (k === t0) rel = " · 오늘";
+    else if (k === shiftKey(t0, -1)) rel = " · 어제";
+    else if (k === shiftKey(t0, 1)) rel = " · 내일";
+    box.appendChild(E("p", "when", parts(k).y + "년" + rel));
+
+    SECS.forEach(function (sec) {
+      box.appendChild(E("p", "lab", SEC_LABEL[sec]));
+      if (sec === "todos") box.appendChild(todoList(k, r.todos));
+      else box.appendChild(lineList(k, sec, r[sec], sec === "rules"));
+    });
+
+    /* 한 줄 추가 — 어느 칸에 넣을지 고르고 적는다 */
+    var secrow = E("div", "secrow");
+    SECS.forEach(function (sec) {
+      var b = btn("sec" + (S.addSec === sec ? " on" : ""), SEC_LABEL[sec]);
+      b.setAttribute("data-sec", sec);
+      on(b, "click", function () {
+        S.addSec = sec;
+        renderDay();
+        try { S.input && S.input.focus(); } catch (e) {}
+      });
+      secrow.appendChild(b);
+    });
+    box.appendChild(secrow);
+
+    var row = E("div", "addrow");
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.maxLength = 300;
+    inp.value = S.draft || "";
+    inp.setAttribute("placeholder", SEC_PH[S.addSec] || "한 줄 추가");
+    inp.setAttribute("aria-label", "한 줄 추가");
+    var add = btn("add", "＋", "한 줄 추가");
+    on(inp, "input", function () { S.draft = inp.value || ""; });
+    function submit() {
+      var v = (inp.value || "").replace(/^\s+|\s+$/g, "");
+      if (!v) return;
+      addLine(k, S.addSec, v);
+      S.draft = "";
+      inp.value = "";
+      renderDay();
+      renderOpen();
+      renderSchedCal();
+      try { S.input && S.input.focus(); } catch (e) {}
+    }
+    on(add, "click", submit);
+    on(inp, "keydown", function (ev) {
+      if (ev && ev.key === "Enter") { ev.preventDefault(); submit(); }
+    });
+    row.appendChild(inp);
+    row.appendChild(add);
+    box.appendChild(row);
+    S.input = inp;
+  }
+
+  function pickScheduleDate(k) {
+    S.schedDate = k;
+    var p = parts(k);
+    S.schedY = p.y; S.schedM = p.m;
+    S.draft = "";
+    renderDay();
+    renderSchedCal();
+    try { if ($.dayCard && $.dayCard.scrollIntoView) $.dayCard.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+  }
+
+  function renderSchedCal() {
+    var n = 0;
+    var keys = Object.keys(DB.entries);
+    keys.forEach(function (k) {
+      var p = parts(k);
+      if (p.y === S.schedY && p.m === S.schedM && hasRec(k)) n++;
+    });
+    paintCal({
+      grid: $.schedGrid, ym: $.schedYm,
+      y: S.schedY, m: S.schedM, sel: S.schedDate,
+      has: hasRec,
+      pick: function (k) { pickScheduleDate(k); }
+    });
+    if ($.schedCap) {
+      $.schedCap.innerHTML = n
+        ? "기록 <b>" + n + "일</b> · 빨간 칸을 누르면 그 날 기록이 열립니다"
+        : "이 달에 적은 기록은 아직 없습니다";
+    }
+  }
+
+  on($.schedPrev, "click", function () {
+    S.schedM--; if (S.schedM < 1) { S.schedM = 12; S.schedY--; } renderSchedCal();
+  });
+  on($.schedNext, "click", function () {
+    S.schedM++; if (S.schedM > 12) { S.schedM = 1; S.schedY++; } renderSchedCal();
+  });
+  on($.schedToday, "click", function () { pickScheduleDate(todayKey()); });
+
+  /* ══ 브리핑 ══════════════════════════════════════ */
+  function renderBriefCal() {
+    paintCal({
+      grid: $.briefGrid, ym: $.briefYm,
+      y: S.briefY, m: S.briefM, sel: S.briefDate,
+      has: function (k) { return briefsOf(k).length > 0; },
+      pick: function (k) {
+        S.briefDate = k;
+        S.briefCalOpen = false;
+        if ($.briefCal) $.briefCal.hidden = true;
+        renderBrief();
+      }
+    });
+  }
+
+  function renderBrief() {
+    if (!$.briefList) return;
+    var k = S.briefDate;
+    if ($.briefChip) $.briefChip.textContent = labelOf(k);
+    clear($.briefList);
+    var days = briefsOf(k).slice();
+    days.sort(function (a, b) {
+      return String((a && a.time) || "").localeCompare(String((b && b.time) || ""));
+    });
+    var total = 0, done = 0;
+    days.forEach(function (en) {
+      list(en && en.items).forEach(function (it, i) { total++; if (bchk(k, en.time, i)) done++; });
+    });
+    if ($.briefCount) {
+      $.briefCount.textContent = total ? (done === total ? "다 봄" : (total - done) + "개 남음") : "없음";
+      $.briefCount.className = "count" + (total && done < total ? "" : " zero");
+    }
+    if (!days.length) {
+      $.briefList.appendChild(E("p", "memo-empty", "이 날은 기록된 브리핑이 없습니다."));
+      return;
+    }
+    days.forEach(function (en) {
+      if (!en) return;
+      var card = E("div", "brief");
+      var top = E("div", "top");
+      top.appendChild(E("span", "time", en.time || ""));
+      top.appendChild(E("span", "kind" + (en.kind ? " " + en.kind : ""),
+                         KIND_LABEL[en.kind] || en.kind || KIND_LABEL.note));
+      if (en.ex) top.appendChild(E("span", "ex", "예시"));
+      card.appendChild(top);
+      if (en.title) card.appendChild(E("p", "title", en.title));
+      var ul = E("ul", "items");
+      list(en.items).forEach(function (it, i) {
+        var ticked = bchk(k, en.time, i);
+        var li = E("li", ticked ? "off" : "");
+        var box = document.createElement("input");
+        box.type = "checkbox";
+        box.checked = ticked;
+        box.setAttribute("aria-label", it.text || "");
+        var sp = E("span", "t", it.text || "");
+        on(box, "change", function () { setBchk(k, en.time, i, box.checked); renderBrief(); });
+        on(sp, "click", function () {
+          setBchk(k, en.time, i, !bchk(k, en.time, i));
+          renderBrief();
+        });
+        li.appendChild(box);
+        li.appendChild(sp);
+        if (it.tag) li.appendChild(E("span", "ex", it.tag));
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+      $.briefList.appendChild(card);
+    });
+  }
+
+  on($.briefChip, "click", function () {
+    S.briefCalOpen = !S.briefCalOpen;
+    if ($.briefCal) $.briefCal.hidden = !S.briefCalOpen;
+    if (S.briefCalOpen) {
+      var p = parts(S.briefDate);
+      S.briefY = p.y; S.briefM = p.m;
+      renderBriefCal();
+    }
+  });
+  on($.briefPrev, "click", function () {
+    S.briefDate = shiftKey(S.briefDate, -1);
+    var p = parts(S.briefDate); S.briefY = p.y; S.briefM = p.m;
+    renderBrief();
+    if (S.briefCalOpen) renderBriefCal();
+  });
+  on($.briefNext, "click", function () {
+    S.briefDate = shiftKey(S.briefDate, 1);
+    var p = parts(S.briefDate); S.briefY = p.y; S.briefM = p.m;
+    renderBrief();
+    if (S.briefCalOpen) renderBriefCal();
+  });
+  on($.briefPrevM, "click", function () {
+    S.briefM--; if (S.briefM < 1) { S.briefM = 12; S.briefY--; } renderBriefCal();
+  });
+  on($.briefNextM, "click", function () {
+    S.briefM++; if (S.briefM > 12) { S.briefM = 1; S.briefY++; } renderBriefCal();
+  });
+
+  /* ══ 메모 — 아이폰 메모처럼 그냥 쓰는 글 ═══════
+     vn-notes-v1 : [{id, text, created, updated, ex?}]  · 최근 수정 순으로 보여 준다. */
+  function notesArr() { return list(DB.notes); }
+  function saveNotes() { return writeObj(K_NOTE, notesArr()); }
+  function findNote(id) {
+    var a = notesArr();
+    for (var i = 0; i < a.length; i++) if (a[i] && a[i].id === id) return a[i];
+    return null;
+  }
+  function sortedNotes() {
+    return notesArr().slice().sort(function (a, b) {
+      return (Number(b && b.updated) || 0) - (Number(a && a.updated) || 0);
+    });
+  }
+  function firstLine(t) {
+    var a = String(t == null ? "" : t).split("\n");
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].replace(/\s/g, "")) return a[i].replace(/\s+$/, "");
+    }
+    return "";
+  }
+  function previewOf(t) {
+    var a = String(t == null ? "" : t).split("\n");
+    var seen = false, buf = [];
+    for (var i = 0; i < a.length; i++) {
+      if (!seen) { if (a[i].replace(/\s/g, "")) seen = true; continue; }
+      buf.push(a[i]);
+      if (buf.join(" ").length > 120) break;
+    }
+    var out = buf.join(" ").replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
+    return out.length > 96 ? out.slice(0, 96) + "…" : out;
+  }
+  function ampm(d) {
+    var h = d.getHours(), ap = h < 12 ? "오전" : "오후", hh = h % 12;
+    if (hh === 0) hh = 12;
+    return ap + " " + hh + ":" + pad(d.getMinutes());
+  }
+  function whenLabel(ts) {
+    var n = Number(ts) || Date.now();
+    var d = new Date(n), k = keyOf(d), t0 = todayKey(), head;
+    if (k === t0) head = "오늘";
+    else if (k === shiftKey(t0, -1)) head = "어제";
+    else if (k.slice(0, 4) === t0.slice(0, 4)) head = parts(k).m + "월 " + parts(k).d + "일 (" + DOW[d.getDay()] + ")";
+    else head = parts(k).y + "년 " + parts(k).m + "월 " + parts(k).d + "일";
+    return head + " · " + ampm(d);
+  }
+  function narrowScreen() {
+    try { return Number(window.innerWidth) <= 520; } catch (e) { return true; }
+  }
+
+  function renderMemos() {
+    if (!$.memoList) return;
+    var arr = sortedNotes();
+    if ($.memoCount) {
+      $.memoCount.textContent = arr.length ? arr.length + "개" : "없음";
+      $.memoCount.className = "count" + (arr.length ? "" : " zero");
+    }
+    clear($.memoList);
+    if (!arr.length) {
+      $.memoList.appendChild(E("p", "memo-empty", "아직 메모가 없습니다. '＋ 새 메모'로 적어 보세요."));
+      return;
+    }
+    arr.forEach(function (n) {
+      if (!n) return;
+      var card = btn("note", "");
+      card.setAttribute("data-id", n.id || "");
+      card.setAttribute("aria-label", (firstLine(n.text) || "새 메모") + " 열기");
+      card.appendChild(E("div", "t", firstLine(n.text) || "새 메모"));
+      var meta = E("div", "meta", whenLabel(n.updated || n.created));
+      if (n.ex) meta.appendChild(E("span", "ex", "예시"));
+      card.appendChild(meta);
+      var prev = previewOf(n.text);
+      if (prev) card.appendChild(E("div", "p", prev));
+      if (n.img) {
+        var im = document.createElement("img");
+        im.className = "nimg";
+        im.setAttribute("src", n.img);
+        im.setAttribute("alt", "손글씨");
+        card.appendChild(im);
+      }
+      on(card, "click", function () { openMemo(n.id); });
+      $.memoList.appendChild(card);
+    });
+  }
+
+  function newMemo() {
+    var now = Date.now();
+    var n = {
+      id: "n" + now + "-" + Math.floor(Math.random() * 1e6),
+      text: "", created: now, updated: now
+    };
+    DB.notes = notesArr();
+    DB.notes.push(n);
+    saveNotes();
+    return n;
+  }
+
+  /** id 가 없으면 가장 최근 메모를, 메모가 하나도 없으면 새로 만들어 연다. */
+  function openMemo(id) {
+    if (!$.memoEditor) return;
+    var n = id ? findNote(id) : sortedNotes()[0];
+    if (!n) n = newMemo();
+    S.edId = n.id;
+    if ($.edText) $.edText.value = n.text || "";
+    if ($.edWhen) $.edWhen.textContent = whenLabel(n.updated || n.created);
+    if ($.edConfirm) $.edConfirm.hidden = true;
+    if ($.edDel) $.edDel.hidden = false;
+    showEditorImage();
+    $.memoEditor.hidden = false;
+    try { document.body.className = "locked"; } catch (e) {}
+    try { if ($.edText) $.edText.focus(); } catch (e) {}
+  }
+
+  /** 나가면서 빈 메모는 지운다. 쓴 글은 이미 저장되어 있다. */
+  function closeMemo() {
+    var n = findNote(S.edId);
+    if (n) {
+      var t = $.edText ? String($.edText.value || "") : "";
+      if (!t.replace(/\s/g, "")) {
+        DB.notes = notesArr().filter(function (x) { return x && x.id !== n.id; });
+        saveNotes();
+      } else if (t !== n.text) {
+        n.text = t;
+        n.updated = Date.now();
+        saveNotes();
+      }
+    }
+    S.edId = null;
+    if ($.memoEditor) $.memoEditor.hidden = true;
+    if ($.edConfirm) $.edConfirm.hidden = true;
+    if ($.edDel) $.edDel.hidden = false;
+    try { document.body.className = ""; } catch (e) {}
+    renderMemos();
+  }
+
+  on($.memoNew, "click", function () { openMemo(newMemo().id); });
+  on($.edBack, "click", function () { closeMemo(); });
+  on($.edText, "input", function () {
+    var n = findNote(S.edId);
+    if (!n) return;
+    n.text = String($.edText.value || "");
+    n.updated = Date.now();
+    saveNotes();
+    if ($.edWhen) $.edWhen.textContent = whenLabel(n.updated);
+  });
+  on($.edDel, "click", function () {
+    if ($.edConfirm) $.edConfirm.hidden = false;
+    if ($.edDel) $.edDel.hidden = true;
+  });
+  on($.edDelNo, "click", function () {
+    if ($.edConfirm) $.edConfirm.hidden = true;
+    if ($.edDel) $.edDel.hidden = false;
+  });
+  on($.edDelYes, "click", function () {
+    var id = S.edId;
+    DB.notes = notesArr().filter(function (x) { return x && x.id !== id; });
+    saveNotes();
+    S.edId = null;
+    if ($.memoEditor) $.memoEditor.hidden = true;
+    if ($.edConfirm) $.edConfirm.hidden = true;
+    if ($.edDel) $.edDel.hidden = false;
+    try { document.body.className = ""; } catch (e) {}
+    renderMemos();
+    if (narrowScreen()) openMemo(null);
+  });
+
+  /* ══ 손글씨 — S펜으로 쓴 획을 그대로 남긴다 ═══
+     필압(pointer.pressure)이 오면 굵기에 반영한다. 손가락은 기본으로 그리지 않는다(손바닥 방지).
+     저장은 canvas.toDataURL('image/png') → vn-notes-v1 의 note.img. 배경까지 담아 다크에서도 보인다. */
+  var PEN_INK = "#14161b";      /* 밝은 배경 위 어두운 획 — 토큰 --text(라이트) */
+  var PEN_BG = "#ffffff";       /* 토큰 --card(라이트) */
+  var PEN_W = 2.4;
+  var D = {
+    canvas: null, ctx: null, strokes: [], base: null, drawing: null,
+    erasing: false, allowFinger: false, w: 0, h: 0
+  };
+
+  function showEditorImage() {
+    if (!$.edImg) return;
+    var n = findNote(S.edId);
+    if (n && n.img) {
+      $.edImg.setAttribute("src", n.img);
+      $.edImg.hidden = false;
+    } else {
+      $.edImg.hidden = true;
+      $.edImg.removeAttribute("src");
+    }
+  }
+
+  function drawHint(msg) {
+    if (!$.drawHint) return;
+    $.drawHint.textContent = msg || "S펜으로 쓰세요. 손가락은 그리지 않습니다. ";
+    if ($.drawAny) $.drawHint.appendChild($.drawAny);
+  }
+
+  function sizeCanvas() {
+    D.canvas = $.drawCanvas;
+    if (!D.canvas) return false;
+    var wrap = $.canvasWrap;
+    var availW = (wrap && wrap.clientWidth ? wrap.clientWidth : 340) - 28;
+    var availH = (wrap && wrap.clientHeight ? wrap.clientHeight : 380) - 28;
+    var cw = Math.max(220, Math.min(availW, 560));
+    var ch = Math.max(160, Math.min(availH, Math.round(cw * 0.82)));
+    var dpr = Math.min((window.devicePixelRatio || 1), 2);
+    D.w = cw; D.h = ch;
+    D.canvas.width = Math.round(cw * dpr);
+    D.canvas.height = Math.round(ch * dpr);
+    try {
+      D.canvas.style.width = cw + "px";
+      D.canvas.style.height = ch + "px";
+    } catch (e) {}
+    try { D.ctx = D.canvas.getContext("2d"); } catch (e) { D.ctx = null; }
+    return !!D.ctx;
+  }
+
+  function widthFor(base, p) {
+    var k = (typeof p === "number" && p > 0) ? p : 0.5;
+    return Math.max(0.9, base * (0.45 + 1.05 * k));
+  }
+
+  function redraw() {
+    if (!D.ctx || !D.canvas) return;
+    var c = D.ctx, W = D.canvas.width, H = D.canvas.height;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.fillStyle = PEN_BG;
+    c.fillRect(0, 0, W, H);
+    if (D.base) { try { c.drawImage(D.base, 0, 0, W, H); } catch (e) {} }
+    D.strokes.forEach(function (st) {
+      var pts = st.pts;
+      c.lineCap = "round";
+      c.lineJoin = "round";
+      c.strokeStyle = st.erase ? PEN_BG : PEN_INK;
+      c.fillStyle = st.erase ? PEN_BG : PEN_INK;
+      if (pts.length === 1) {
+        c.beginPath();
+        c.arc(pts[0].x, pts[0].y, Math.max(0.6, widthFor(st.baseW, pts[0].p) / 2), 0, Math.PI * 2);
+        c.fill();
+        return;
+      }
+      for (var i = 1; i < pts.length; i++) {
+        c.beginPath();
+        c.lineWidth = widthFor(st.baseW, pts[i].p);
+        c.moveTo(pts[i - 1].x, pts[i - 1].y);
+        c.lineTo(pts[i].x, pts[i].y);
+        c.stroke();
+      }
+    });
+  }
+
+  function pointOf(ev) {
+    var r = null;
+    try { r = D.canvas.getBoundingClientRect(); } catch (e) {}
+    var left = r ? r.left : 0, top = r ? r.top : 0;
+    var rw = (r && r.width) ? r.width : D.w, rh = (r && r.height) ? r.height : D.h;
+    var sx = D.canvas.width / (rw || 1), sy = D.canvas.height / (rh || 1);
+    return {
+      x: (Number(ev.clientX) - left) * sx,
+      y: (Number(ev.clientY) - top) * sy,
+      p: (typeof ev.pressure === "number" && ev.pressure > 0) ? ev.pressure : 0.5
+    };
+  }
+
+  function allowedPointer(ev) {
+    var t = ev && ev.pointerType;
+    if (t === "pen") return true;
+    if (!D.allowFinger) return false;
+    return t === "touch" || t === "mouse" || !t;
+  }
+
+  function saveDrawing() {
+    var n = findNote(S.edId);
+    if (!n || !D.canvas) return;
+    if (!D.strokes.length && !D.base) {
+      if (n.img) {
+        delete n.img;
+        n.updated = Date.now();
+        saveNotes();
+        showEditorImage();
+      }
+      return;
+    }
+    var url = "";
+    try { url = D.canvas.toDataURL("image/png"); } catch (e) { url = ""; }
+    if (!url) { drawHint("그림을 저장하지 못했습니다. "); return; }
+    n.img = url;
+    n.updated = Date.now();
+    if (!saveNotes()) drawHint("저장 공간이 부족해 그림을 남기지 못했습니다. 긴 메모를 정리해 보세요. ");
+    showEditorImage();
+  }
+
+  function setTool(erase) {
+    D.erasing = !!erase;
+    if ($.drawPen) $.drawPen.setAttribute("aria-pressed", D.erasing ? "false" : "true");
+    if ($.drawErase) $.drawErase.setAttribute("aria-pressed", D.erasing ? "true" : "false");
+  }
+
+  function openDraw() {
+    if (!$.drawPanel) return;
+    D.strokes = [];
+    D.base = null;
+    D.drawing = null;
+    D.erasing = false;
+    setTool(false);
+    $.drawPanel.hidden = false;
+    try { document.body.className = "locked"; } catch (e) {}
+    if (!sizeCanvas()) {
+      $.drawPanel.hidden = true;
+      drawHint("");
+      return;
+    }
+    redraw();
+    var n = findNote(S.edId);
+    drawHint("");
+    if (n && n.img && typeof Image !== "undefined") {
+      try {
+        var im = new Image();
+        im.onload = function () { D.base = im; redraw(); };
+        im.src = n.img;
+      } catch (e) {}
+    }
+  }
+
+  function closeDraw() {
+    if (!$.drawPanel) return;
+    saveDrawing();
+    $.drawPanel.hidden = true;
+    try { document.body.className = S.edId ? "locked" : ""; } catch (e) {}
+    renderMemos();
+  }
+
+  on($.edPen, "click", function () {
+    if (!S.edId) return;
+    openDraw();
+  });
+  on($.drawClose, "click", function () { closeDraw(); });
+  on($.drawPen, "click", function () { setTool(false); });
+  on($.drawErase, "click", function () { setTool(true); });
+  on($.drawUndo, "click", function () {
+    if (!D.strokes.length) return;
+    D.strokes.pop();
+    redraw();
+    saveDrawing();
+  });
+  on($.drawClear, "click", function () {
+    D.strokes = [];
+    D.base = null;
+    redraw();
+    saveDrawing();
+  });
+  on($.drawAny, "click", function () {
+    D.allowFinger = !D.allowFinger;
+    $.drawAny.setAttribute("aria-pressed", D.allowFinger ? "true" : "false");
+  });
+
+  on($.drawCanvas, "pointerdown", function (ev) {
+    if (!D.ctx || !allowedPointer(ev)) return;
+    try { ev.preventDefault(); } catch (e) {}
+    try { D.canvas.setPointerCapture(ev.pointerId); } catch (e) {}
+    var p = pointOf(ev);
+    D.drawing = { erase: D.erasing, baseW: D.erasing ? 16 : PEN_W, pts: [p] };
+    D.strokes.push(D.drawing);
+    redraw();
+  });
+  on($.drawCanvas, "pointermove", function (ev) {
+    if (!D.drawing || !D.ctx) return;
+    try { ev.preventDefault(); } catch (e) {}
+    var p = pointOf(ev);
+    var pts = D.drawing.pts;
+    var last = pts[pts.length - 1];
+    if (Math.abs(p.x - last.x) < 0.6 && Math.abs(p.y - last.y) < 0.6) return;
+    pts.push(p);
+    var c = D.ctx;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    c.strokeStyle = D.drawing.erase ? PEN_BG : PEN_INK;
+    c.beginPath();
+    c.lineWidth = widthFor(D.drawing.baseW, p.p);
+    c.moveTo(last.x, last.y);
+    c.lineTo(p.x, p.y);
+    c.stroke();
+  });
+  function endStroke() {
+    if (!D.drawing) return;
+    D.drawing = null;
+    redraw();
+    saveDrawing();
+  }
+  on($.drawCanvas, "pointerup", endStroke);
+  on($.drawCanvas, "pointercancel", endStroke);
+  try {
+    window.__vnDraw = {
+      count: function () { return D.strokes.length; },
+      allowFinger: function () { return D.allowFinger; }
+    };
+  } catch (e) {}
+
+  /* ══ 그리기 ══════════════════════════════════ */
+  function renderAll() {
+    renderOpen();
+    renderSchedCal();
+    renderDay();
+    renderBrief();
+    renderBriefCal();
+    renderMemos();
+    setTab(S.tab);
+  }
+
+  /* ══ 시작 ════════════════════════════════════════════════════
+     로그인 전에는 빈 화면 + 게이트 한 장. 연결돼 있으면 화면 없이 토큰을 갱신해 바로 연다. */
+  function boot() {
+    DOC = emptyDoc();
+    rebind();
+    renderAll();
+    lock();
+    renderStatus();
+    var t = lsGet(THEME_KEY);
+    if (t === "dark" || t === "light") applyTheme(t);
+    if (!configured()) return;
+    window.__vnGis = function () { trySilent(); };
+    if (gis()) { trySilent(); return; }
+    var tries = 0;
+    (function tick() {
+      if (gis()) { trySilent(); return; }
+      if (++tries > 20) return;
+      later(tick, 500);
+    })();
+  }
+
+  on($.gateConnect, "click", function () { connect(); });
+  on($.gateOffline, "click", function () {
+    if (!MIRROR || !MIRROR.data) return;
+    var wasDirty = !!MIRROR.dirty;
+    Sync.mode = "offline";
+    adopt({ data: MIRROR.data, updatedAt: MIRROR.updatedAt });
+    Sync.mode = "offline";
+    Sync.dirty = wasDirty;
+    saveMirror();
+    renderStatus();
+  });
+  on($.syncfix, "click", function () {
+    if (Sync.mode === "expired") { Sync.silentTried = false; askToken(false, function (e, tok) { if (tok) start(tok); }); return; }
+    if (authorized()) pull({}); else connect();
+  });
+  on($.setBtn, "click", function () { openSettings(); });
+  on($.setClose, "click", function () { closeSettings(); });
+  on($.setSync, "click", function () {
+    if (!authorized()) { closeSettings(); connect(); return; }
+    Sync.dirty = true;
+    saveMirror();
+    pull({});
+    closeSettings();
+  });
+  on($.setImport, "click", function () { importPublic(); });
+  on($.setCidSave, "click", function () {
+    if (applyClientId()) { closeSettings(); if (configured()) trySilent(); }
+  });
+  on($.gateCfg, "click", function () { openSettings(); if ($.setCidIn) $.setCidIn.focus(); });
+  on($.setOut, "click", function () { signOut(); });
+
+  try {
+    document.addEventListener("visibilitychange", function () {
+      try {
+        if (document.visibilityState === "hidden") {
+          flushLate();
+          if (Sync.dirty && authorized() && !Sync.busy) push({});
+        } else if (authorized() && !Sync.busy && !Sync.dirty &&
+                   !($.memoEditor && $.memoEditor.hidden === false)) {
+          pull({});
+        }
+      } catch (e) {}
+    });
+  } catch (e) {}
+
+  boot();
+
+  /* ══ 시험용 손잡이(앱 동작에는 쓰지 않는다) ═══ */
+  try {
+    window.__vnSync = {
+      state: function () {
+        return {
+          mode: Sync.mode, token: Sync.token, fileId: Sync.fileId, folderId: Sync.folderId,
+          dirty: Sync.dirty, busy: Sync.busy, base: Sync.baseUpdatedAt, local: Sync.localUpdatedAt,
+          note: Sync.note, last: Sync.lastSyncedAt
+        };
+      },
+      doc: function () { return DOC; },
+      mirror: function () { return MIRROR; },
+      configured: function () { return configured(); },
+      start: function (tok) { start(tok); },
+      pull: function () { pull({}); },
+      push: function (o) { push(o || {}); },
+      flush: function () { flushLate(); if (Sync.dirty) push({}); },
+      buildDoc: function (iso) { return buildDoc(iso || nowIso(), deviceId()); },
+      backupName: backupName,
+      connect: connect,
+      importPublic: importPublic,
+      lock: lock
+    };
+  } catch (e) {}
+
+  /* ══ 오프라인(홈 화면 앱) 준비 ═══════════════ */
+  try {
+    if ("serviceWorker" in navigator) {
+      var run = function () {
+        try {
+          navigator.serviceWorker.register("sw.js").catch(function () {});
+        } catch (e) {}
+      };
+      if (document.readyState === "complete") run();
+      else window.addEventListener("load", run);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
