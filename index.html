@@ -452,6 +452,47 @@
     margin:8px 0 0;border:1px solid var(--line);border-radius:10px;background:#ffffff;
   }
 
+  /* ── 받아쓰기·녹음 도구 ─────────────────────── */
+  .edtools{
+    flex:0 0 auto;display:flex;align-items:center;gap:8px;
+    padding:9px 12px calc(9px + env(safe-area-inset-bottom));
+    background:var(--card);border-top:1px solid var(--line);
+  }
+  .tbtn{
+    flex:0 0 auto;height:34px;padding:0 12px;border-radius:11px;
+    border:1px solid var(--line);background:var(--fill);color:var(--text);
+    font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+  }
+  .tbtn.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+  .tbtn.rec{background:var(--accent);border-color:var(--accent);color:#fff}
+  .rectime{
+    margin-left:auto;font-size:12px;font-weight:800;color:var(--accent);
+    font-variant-numeric:tabular-nums;
+  }
+  .edmsg{
+    flex:0 0 auto;margin:0;padding:7px 14px;
+    background:var(--bg-soft);border-top:1px solid var(--line);
+    font-size:11.5px;line-height:1.5;color:var(--dim);
+  }
+  .reclist{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;padding:8px 12px 0;background:var(--card)}
+  .recard{
+    display:flex;align-items:center;gap:10px;
+    padding:7px 9px;border:1px solid var(--line);border-radius:11px;background:var(--fill);
+  }
+  .recard .rbtn{
+    flex:0 0 auto;width:32px;height:32px;border-radius:50%;border:0;
+    background:var(--card);color:var(--accent);font-size:13px;font-weight:800;
+    box-shadow:var(--shadow-sm);cursor:pointer;padding:0;
+  }
+  .recard .rbtn.del{background:none;box-shadow:none;color:var(--dim2);font-size:16px;width:26px}
+  .recard .rmeta{flex:1;min-width:0}
+  .recard .rt{font-size:12.5px;font-weight:700}
+  .recard .rwait{
+    display:inline-block;margin-top:2px;font-size:10.5px;font-weight:800;
+    color:var(--accent);background:var(--accent-soft);
+    border-radius:999px;padding:1px 7px;
+  }
+
   /* ── 브리핑 탭 ──────────────────────────────── */
   .brief{margin:12px 0 0}
   .brief .top{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
@@ -679,7 +720,7 @@
       </div>
     </div>
     <div id="memo-list"></div>
-    <p class="foot" id="memo-foot">메모는 내 구글 드라이브에 저장됩니다.<br>쓰는 대로 바로 저장됩니다.</p>
+    <p class="foot" id="memo-foot">메모는 내 구글 드라이브에 저장됩니다. 쓰는 대로 바로 저장됩니다.<br>받아쓰기는 브라우저 음성인식을 씁니다.</p>
   </section>
 </main>
 
@@ -699,6 +740,18 @@
   <div class="edbody">
     <textarea id="ed-text" placeholder="여기에 그냥 쓰세요. 쓰는 대로 남습니다." aria-label="메모 본문"></textarea>
     <img class="edimg" id="ed-img" alt="손글씨 그림" hidden>
+  </div>
+  <div class="reclist" id="rec-list" hidden></div>
+  <div class="edtools">
+    <button class="tbtn" id="ed-dict" type="button" aria-pressed="false">🎤 받아쓰기</button>
+    <button class="tbtn" id="ed-rec" type="button" aria-pressed="false">● 녹음</button>
+    <span class="rectime" id="rec-time" hidden></span>
+  </div>
+  <p class="edmsg" id="ed-msg" hidden></p>
+  <div class="edconfirm" id="rec-confirm" hidden>
+    <span>이 녹음을 지울까요?</span>
+    <button class="edbtn solid" id="rec-del-yes" type="button">지우기</button>
+    <button class="edbtn plain" id="rec-del-no" type="button">취소</button>
   </div>
 </div>
 
@@ -842,7 +895,7 @@
   var Sync = {
     mode: "locked",        /* locked | opening | live | offline | expired */
     token: null, granted: false,
-    fileId: null, folderId: null,
+    fileId: null, folderId: null, audioFolderId: null,
     baseUpdatedAt: null, localUpdatedAt: null,
     dirty: false, busy: false, queued: false,
     late: [], timer: null,
@@ -937,6 +990,7 @@
   function drive(o, cb) {
     var headers = { Authorization: "Bearer " + Sync.token };
     if (o.json) headers["Content-Type"] = "application/json; charset=UTF-8";
+    if (o.raw && o.mime) headers["Content-Type"] = o.mime;   /* 소리 본체는 있는 그대로 */
     xhr({ method: o.method, url: (o.upload ? UPLOAD_API : DRIVE_API) + o.path, headers: headers, body: o.body },
       function (e, st, txt) {
         if (e) return cb(e);
@@ -1339,6 +1393,7 @@
     renderAll();
     renderStatus();
     renderSettings();
+    try { flushAudio(); } catch (e) {}
   }
 
   function say(msg, sticky) {
@@ -1462,6 +1517,8 @@
     edDel: id("ed-del"), edConfirm: id("ed-confirm"),
     edDelYes: id("ed-del-yes"), edDelNo: id("ed-del-no"), edText: id("ed-text"),
     edPen: id("ed-pen"), edImg: id("ed-img"),
+    edDict: id("ed-dict"), edRec: id("ed-rec"), recTime: id("rec-time"), recList: id("rec-list"),
+    edMsg: id("ed-msg"), recConfirm: id("rec-confirm"), recDelYes: id("rec-del-yes"), recDelNo: id("rec-del-no"),
     drawPanel: id("draw-panel"), drawCanvas: id("draw-canvas"), canvasWrap: id("canvas-wrap"),
     drawPen: id("draw-pen"), drawErase: id("draw-erase"), drawUndo: id("draw-undo"),
     drawClear: id("draw-clear"), drawClose: id("draw-close"), drawHint: id("draw-hint"),
@@ -1953,6 +2010,9 @@
     if ($.edConfirm) $.edConfirm.hidden = true;
     if ($.edDel) $.edDel.hidden = false;
     showEditorImage();
+    edMsg("");
+    if ($.recConfirm) $.recConfirm.hidden = true;
+    renderRecs();
     $.memoEditor.hidden = false;
     try { document.body.className = "locked"; } catch (e) {}
     try { if ($.edText) $.edText.focus(); } catch (e) {}
@@ -1960,6 +2020,10 @@
 
   /** 나가면서 빈 메모는 지운다. 쓴 글은 이미 저장되어 있다. */
   function closeMemo() {
+    if (DICT.on) dictStop();
+    if (REC.on) stopRec();
+    edMsg("");
+    if ($.recConfirm) $.recConfirm.hidden = true;
     var n = findNote(S.edId);
     if (n) {
       var t = $.edText ? String($.edText.value || "") : "";
@@ -1982,14 +2046,15 @@
 
   on($.memoNew, "click", function () { openMemo(newMemo().id); });
   on($.edBack, "click", function () { closeMemo(); });
-  on($.edText, "input", function () {
+  function pushEditorText() {
     var n = findNote(S.edId);
     if (!n) return;
-    n.text = String($.edText.value || "");
+    n.text = String(($.edText && $.edText.value) || "");
     n.updated = Date.now();
     saveNotes();
     if ($.edWhen) $.edWhen.textContent = whenLabel(n.updated);
-  });
+  }
+  on($.edText, "input", function () { pushEditorText(); });
   on($.edDel, "click", function () {
     if ($.edConfirm) $.edConfirm.hidden = false;
     if ($.edDel) $.edDel.hidden = true;
@@ -2241,6 +2306,435 @@
     };
   } catch (e) {}
 
+  /* ══ 받아쓰기 — 브라우저 음성인식(Web Speech API) ═══════════════
+     말한 것이 커서 자리에 글로 들어가고, 확정된 문장만 남는다. 언어는 한국어 고정.
+     이 API 는 오디오를 브라우저 제조사 서버로 보낸다(안내문에 적어 둔다) — 이 페이지는 저장하지 않는다. */
+  var DICT = { rec: null, on: false, base: "", caret: 0, committed: "", interim: "" };
+
+  function speechCtor() {
+    try { return window.SpeechRecognition || window.webkitSpeechRecognition || null; } catch (e) { return null; }
+  }
+  function edMsg(msg) {
+    if (!$.edMsg) return;
+    $.edMsg.textContent = msg || "";
+    $.edMsg.hidden = !msg;
+  }
+  function dictRender() {
+    var ta = $.edText;
+    if (!ta) return;
+    var c = DICT.caret;
+    ta.value = DICT.base.slice(0, c) + DICT.committed + DICT.interim + DICT.base.slice(c);
+    var at = c + DICT.committed.length + DICT.interim.length;
+    try { ta.selectionStart = at; ta.selectionEnd = at; } catch (e) {}
+  }
+  function dictFinish() {
+    DICT.on = false;
+    DICT.interim = "";
+    if (DICT.rec) {
+      try { DICT.rec.onresult = null; DICT.rec.onend = null; DICT.rec.onerror = null; } catch (e) {}
+    }
+    DICT.rec = null;
+    if ($.edDict) { $.edDict.setAttribute("aria-pressed", "false"); $.edDict.className = "tbtn"; }
+    dictRender();
+    pushEditorText();
+  }
+  function dictStop() {
+    if (!DICT.rec) { dictFinish(); return; }
+    try { DICT.rec.stop(); } catch (e) { dictFinish(); }
+  }
+  function dictStart() {
+    var C = speechCtor();
+    if (!C) { edMsg("이 브라우저는 받아쓰기를 지원하지 않습니다."); return; }
+    var ta = $.edText;
+    if (!ta) return;
+    DICT.base = String(ta.value == null ? "" : ta.value);
+    DICT.caret = (typeof ta.selectionStart === "number") ? ta.selectionStart : DICT.base.length;
+    DICT.committed = "";
+    DICT.interim = "";
+    var rec = null;
+    try { rec = new C(); } catch (e) { edMsg("받아쓰기를 시작하지 못했습니다."); return; }
+    rec.lang = "ko-KR";
+    rec.interimResults = true;
+    rec.continuous = true;
+    rec.onresult = function (ev) {
+      var res = ev && ev.results;
+      if (!res) return;
+      var fin = "", mid = "";
+      var i0 = ev.resultIndex || 0;
+      for (var i = i0; i < res.length; i++) {
+        var r = res[i];
+        var t = (r && r[0] && r[0].transcript) ? String(r[0].transcript) : "";
+        if (r && r.isFinal) fin += t; else mid += t;
+      }
+      DICT.committed += fin;
+      DICT.interim = mid;
+      dictRender();
+      if (fin) pushEditorText();   /* 확정분은 그 자리에서 저장 */
+    };
+    rec.onerror = function (ev) {
+      var e = (ev && ev.error) || "";
+      if (e === "not-allowed" || e === "service-not-allowed") edMsg("마이크 권한이 없어 받아쓰기를 쓸 수 없습니다.");
+      else if (e === "network") edMsg("음성인식 서버에 닿지 못했습니다. 잠시 뒤 다시 눌러 주세요.");
+      else if (e === "no-speech") edMsg("");
+      else edMsg("받아쓰기를 멈췄습니다.");
+      dictFinish();
+    };
+    rec.onend = function () { if (DICT.on) dictFinish(); };
+    DICT.rec = rec;
+    DICT.on = true;
+    edMsg("");
+    try { rec.start(); } catch (e) { DICT.on = false; DICT.rec = null; edMsg("받아쓰기를 시작하지 못했습니다."); return; }
+    if (!DICT.on) return;   /* 시작하자마자 권한 거부 등으로 끝났으면 그대로 둔다 */
+    if ($.edDict) { $.edDict.setAttribute("aria-pressed", "true"); $.edDict.className = "tbtn on"; }
+  }
+  on($.edDict, "click", function () {
+    if (DICT.on) { dictStop(); return; }
+    if (!speechCtor()) { edMsg("이 브라우저는 받아쓰기를 지원하지 않습니다."); return; }
+    dictStart();
+  });
+
+  /* ══ 녹음 — 메모에 붙는 목소리. 본체는 드라이브, 기기 사본은 IndexedDB ══
+     메타데이터(이름·길이·시각)만 바이브노트.json 의 메모에 들어가고,
+     소리는 드라이브 vibe-note/audio/YYYYMMDD-HHMMSS.webm 로 올라간다.
+     localStorage 에는 소리를 절대 쓰지 않는다. */
+  var REC = { rec: null, stream: null, chunks: [], on: false, t0: 0, timer: null, noteId: null, mime: "", bytes: 0, del: null };
+  var MAX_REC_MS = 10 * 60 * 1000;
+  var MAX_REC_BYTES = 20 * 1024 * 1024;
+
+  function pickMime() {
+    try {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
+        var a = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+        for (var i = 0; i < a.length; i++) if (MediaRecorder.isTypeSupported(a[i])) return a[i];
+      }
+    } catch (e) {}
+    return "";
+  }
+  function extOf(mime) { return String(mime || "").indexOf("mp4") > -1 ? "m4a" : "webm"; }
+  function durText(ms) {
+    var s = Math.max(0, Math.round((Number(ms) || 0) / 1000));
+    return pad(Math.floor(s / 60)) + ":" + pad(s % 60);
+  }
+  function recTick() {
+    var ms = Date.now() - REC.t0;
+    if ($.recTime) { $.recTime.hidden = false; $.recTime.textContent = durText(ms); }
+    if (ms >= MAX_REC_MS) { edMsg("녹음은 한 번에 10분까지입니다. 여기서 멈췄습니다."); stopRec(); return; }
+    if (REC.bytes >= MAX_REC_BYTES) { edMsg("녹음은 한 번에 20MB까지입니다. 여기서 멈췄습니다."); stopRec(); return; }
+  }
+  function startTicker() {
+    stopTicker();
+    try {
+      if (typeof setInterval === "function") REC.timer = setInterval(recTick, 1000);
+    } catch (e) { REC.timer = null; }
+    if ($.recTime) { $.recTime.hidden = false; $.recTime.textContent = "00:00"; }
+  }
+  function stopTicker() {
+    try { if (REC.timer && typeof clearInterval === "function") clearInterval(REC.timer); } catch (e) {}
+    REC.timer = null;
+  }
+  function startRec() {
+    if (!S.edId) return;
+    if (REC.on) return;
+    var nav = null;
+    try { nav = navigator.mediaDevices; } catch (e) { nav = null; }
+    if (!nav || !nav.getUserMedia || !window.MediaRecorder) {
+      edMsg("이 브라우저는 녹음을 지원하지 않습니다.");
+      return;
+    }
+    REC.noteId = S.edId;
+    edMsg("");
+    try {
+      nav.getUserMedia({ audio: true }).then(function (stream) {
+        var mime = pickMime();
+        var rec = null;
+        try { rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); }
+        catch (e) { rec = null; }
+        if (!rec) {
+          try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e2) {}
+          edMsg("녹음을 시작하지 못했습니다.");
+          return;
+        }
+        REC.stream = stream;
+        REC.rec = rec;
+        REC.chunks = [];
+        REC.bytes = 0;
+        REC.mime = mime || (rec.mimeType || "audio/webm");
+        rec.ondataavailable = function (e) {
+          if (e && e.data && e.data.size) { REC.chunks.push(e.data); REC.bytes += e.data.size; }
+        };
+        rec.onstop = function () { finishRec(); };
+        try { rec.start(); } catch (e) { edMsg("녹음을 시작하지 못했습니다."); return; }
+        REC.on = true;
+        REC.t0 = Date.now();
+        startTicker();
+        if ($.edRec) { $.edRec.className = "tbtn on rec"; $.edRec.setAttribute("aria-pressed", "true"); }
+      }, function () {
+        edMsg("마이크 권한이 없어 녹음할 수 없습니다.");
+      });
+    } catch (e) { edMsg("녹음을 시작하지 못했습니다."); }
+  }
+  function stopRec() {
+    if (!REC.on || !REC.rec) return;
+    try { REC.rec.stop(); } catch (e) { finishRec(); }
+  }
+  function finishRec() {
+    stopTicker();
+    var ms = REC.t0 ? (Date.now() - REC.t0) : 0;
+    var wasOn = REC.on;
+    REC.on = false;
+    REC.t0 = 0;
+    if ($.edRec) { $.edRec.className = "tbtn"; $.edRec.setAttribute("aria-pressed", "false"); }
+    if ($.recTime) $.recTime.hidden = true;
+    var stream = REC.stream;
+    REC.stream = null;
+    if (stream && stream.getTracks) { try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} }
+    var chunks = REC.chunks;
+    REC.chunks = [];
+    REC.rec = null;
+    if (!wasOn) return;
+    var mime = REC.mime || "audio/webm";
+    var blobby = null;
+    try { blobby = new Blob(chunks, { type: mime }); } catch (e) { blobby = null; }
+    var size = 0;
+    try { size = blobby && blobby.size ? blobby.size : 0; } catch (e) { size = 0; }
+    if (!size) { edMsg("녹음이 비어 있습니다. 다시 눌러 주세요."); return; }
+    var a = newAudioEntry(mime, ms, size);
+    var noteId = REC.noteId || S.edId;
+    var n = findNote(noteId);
+    if (!n) { edMsg("메모를 찾지 못해 녹음을 붙이지 못했습니다."); return; }
+    n.audio = list(n.audio).slice();
+    n.audio.push(a);
+    n.updated = Date.now();
+    saveNotes();
+    LocalAudio.put(a.id, blobby, function () {
+      renderRecs();
+      tryUploadAudio(a, blobby, function () { renderRecs(); });
+    });
+  }
+
+  function newAudioEntry(mime, ms, size) {
+    var now = Date.now();
+    var d = new Date(now);
+    var name = "" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" +
+      pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds()) + "." + extOf(mime);
+    return {
+      id: "a" + now + "-" + Math.floor(Math.random() * 1e6),
+      name: name, ms: Math.max(0, Math.round(ms || 0)), size: size || 0,
+      at: new Date(now).toISOString(), up: false, mime: mime || "audio/webm", fileId: null
+    };
+  }
+  on($.edRec, "click", function () {
+    if (REC.on) { stopRec(); return; }
+    startRec();
+  });
+
+  /* ── 기기 사본(IndexedDB). 없으면 이번 화면에서만 들고 있는다. ── */
+  var LocalAudio = (function () {
+    var mem = {}, db = null, ready = false;
+    function openDb(cb) {
+      if (ready) return cb(db);
+      try {
+        if (!window.indexedDB) { ready = true; db = null; return cb(null); }
+        var req = indexedDB.open("vibe-note-audio", 1);
+        req.onupgradeneeded = function () { try { req.result.createObjectStore("audio"); } catch (e) {} };
+        req.onsuccess = function () { db = req.result; ready = true; cb(db); };
+        req.onerror = function () { db = null; ready = true; cb(null); };
+      } catch (e) { ready = true; db = null; cb(null); }
+    }
+    return {
+      put: function (id, blob, cb) {
+        openDb(function (d) {
+          if (!d) { mem[id] = blob; if (cb) cb(null); return; }
+          try {
+            var tx = d.transaction("audio", "readwrite");
+            tx.objectStore("audio").put(blob, id);
+            tx.oncomplete = function () { if (cb) cb(null); };
+            tx.onerror = function () { mem[id] = blob; if (cb) cb(null); };
+          } catch (e) { mem[id] = blob; if (cb) cb(null); }
+        });
+      },
+      get: function (id, cb) {
+        if (mem[id]) return cb(mem[id]);
+        openDb(function (d) {
+          if (!d) return cb(null);
+          try {
+            var tx = d.transaction("audio", "readonly");
+            var rq = tx.objectStore("audio").get(id);
+            rq.onsuccess = function () { cb(rq.result || null); };
+            rq.onerror = function () { cb(null); };
+          } catch (e) { cb(null); }
+        });
+      },
+      del: function (id, cb) {
+        delete mem[id];
+        openDb(function (d) {
+          if (!d) { if (cb) cb(null); return; }
+          try {
+            var tx = d.transaction("audio", "readwrite");
+            tx.objectStore("audio").delete(id);
+            tx.oncomplete = function () { if (cb) cb(null); };
+            tx.onerror = function () { if (cb) cb(null); };
+          } catch (e) { if (cb) cb(null); }
+        });
+      }
+    };
+  })();
+
+  /* ── 드라이브 audio 폴더·올리기·내려받기 ── */
+  function ensureAudioFolder(cb) {
+    if (Sync.audioFolderId) return cb(null, Sync.audioFolderId);
+    ensureFolder(function (e, fid) {
+      if (e) return cb(e);
+      var q = "name = 'audio' and mimeType = 'application/vnd.google-apps.folder' and '" + fid + "' in parents and trashed = false";
+      drive({ method: "GET", path: "/files?spaces=drive&fields=files(id,name)&q=" + encodeURIComponent(q) }, function (e2, j) {
+        if (e2) return cb(e2);
+        var f = j && j.files && j.files[0];
+        if (f && f.id) { Sync.audioFolderId = f.id; return cb(null, f.id); }
+        drive({ method: "POST", path: "/files?fields=id", json: true,
+                body: JSON.stringify({ name: "audio", mimeType: "application/vnd.google-apps.folder", parents: [fid] }) },
+          function (e3, j3) {
+            if (e3) return cb(e3);
+            Sync.audioFolderId = (j3 && j3.id) || null;
+            cb(null, Sync.audioFolderId);
+          });
+      });
+    });
+  }
+  function uploadAudio(a, blob, cb) {
+    ensureAudioFolder(function (e, fid) {
+      if (e) return cb(e);
+      drive({ method: "POST", path: "/files?fields=id", json: true,
+              body: JSON.stringify({ name: a.name, mimeType: a.mime || "audio/webm", parents: [fid] }) },
+        function (e2, j2) {
+          if (e2) return cb(e2);
+          var id = j2 && j2.id;
+          if (!id) return cb(new Error("no_id"));
+          drive({ method: "PATCH", path: "/files/" + encodeURIComponent(id) + "?uploadType=media&fields=id",
+                  upload: true, body: blob, raw: true, mime: a.mime || "audio/webm" },
+            function (e3) {
+              if (e3) return cb(e3);
+              a.fileId = id;
+              a.up = true;
+              saveNotes();
+              cb(null);
+            });
+        });
+    });
+  }
+  function tryUploadAudio(a, blob, cb) {
+    if (!authorized()) { if (cb) cb(new Error("offline")); return; }
+    function go(b) {
+      if (!b) { if (cb) cb(new Error("no_blob")); return; }
+      uploadAudio(a, b, function (e) { if (cb) cb(e || null); });
+    }
+    if (blob) return go(blob);
+    LocalAudio.get(a.id, go);
+  }
+  /** 연결될 때마다 아직 못 올린 녹음을 다시 올린다. */
+  function flushAudio() {
+    if (!authorized()) return;
+    var all = notesArr();
+    for (var i = 0; i < all.length; i++) {
+      var as = list(all[i] && all[i].audio);
+      for (var j = 0; j < as.length; j++) {
+        if (as[j] && !as[j].up) tryUploadAudio(as[j], null, function () { renderRecs(); });
+      }
+    }
+  }
+  function fetchAudio(a, cb) {
+    if (!authorized() || !a.fileId) return cb(null);
+    var x = null;
+    try { x = new XMLHttpRequest(); } catch (e) { return cb(null); }
+    try {
+      x.open("GET", DRIVE_API + "/files/" + encodeURIComponent(a.fileId) + "?alt=media", true);
+      x.responseType = "blob";
+      x.setRequestHeader("Authorization", "Bearer " + Sync.token);
+      x.onload = function () { cb(x.status >= 200 && x.status < 300 ? x.response : null); };
+      x.onerror = function () { cb(null); };
+      x.send(null);
+    } catch (e) { cb(null); }
+  }
+  /** 재생용 — 기기 사본이 먼저, 없으면 드라이브에서 받아 기기에도 남긴다. */
+  function audioBlob(a, cb) {
+    LocalAudio.get(a.id, function (b) {
+      if (b) return cb(b);
+      fetchAudio(a, function (got) {
+        if (!got) return cb(null);
+        LocalAudio.put(a.id, got, function () { cb(got); });
+      });
+    });
+  }
+
+  /* ── 재생 카드 ── */
+  function renderRecs() {
+    var box = $.recList;
+    if (!box) return;
+    var n = findNote(S.edId);
+    var as = n ? list(n.audio) : [];
+    clear(box);
+    if (!as.length) { box.hidden = true; return; }
+    box.hidden = false;
+    as.forEach(function (a) {
+      if (!a) return;
+      var card = E("div", "recard");
+      var play = btn("rbtn", "▶", "녹음 재생");
+      var mid = E("div", "rmeta");
+      mid.appendChild(E("div", "rt", "녹음 " + durText(a.ms)));
+      if (!a.up) mid.appendChild(E("span", "rwait", "아직 안 올라감"));
+      var del = btn("rbtn del", "×", "이 녹음 지우기");
+      card.appendChild(play);
+      card.appendChild(mid);
+      card.appendChild(del);
+      box.appendChild(card);
+      var au = document.createElement("audio");
+      try { au.preload = "none"; } catch (e) {}
+      var url = "";
+      on(au, "ended", function () { play.textContent = "▶"; });
+      on(play, "click", function () {
+        if (!url) {
+          play.textContent = "…";
+          audioBlob(a, function (b) {
+            if (!b) { play.textContent = "▶"; edMsg("녹음을 불러오지 못했습니다."); return; }
+            try { url = (window.URL && URL.createObjectURL) ? URL.createObjectURL(b) : ""; } catch (e) { url = ""; }
+            if (!url) { play.textContent = "▶"; edMsg("녹음을 재생할 수 없습니다."); return; }
+            try { au.src = url; } catch (e) {}
+            play.textContent = "❚❚";
+            try { if (au.play) au.play(); } catch (e) {}
+          });
+          return;
+        }
+        try {
+          if (au.paused === false) { au.pause(); play.textContent = "▶"; }
+          else { au.play(); play.textContent = "❚❚"; }
+        } catch (e) {}
+      });
+      on(del, "click", function () { askDelRec(a.id); });
+    });
+  }
+  function askDelRec(id) {
+    REC.del = id;
+    if ($.recConfirm) $.recConfirm.hidden = false;
+  }
+  function dropRec(id) {
+    var n = findNote(S.edId);
+    if (n) {
+      var gone = null;
+      n.audio = list(n.audio).filter(function (a) { if (a && a.id === id) { gone = a; return false; } return true; });
+      n.updated = Date.now();
+      if (!n.audio.length) delete n.audio;
+      saveNotes();
+      if (gone && gone.fileId && authorized()) {
+        drive({ method: "DELETE", path: "/files/" + encodeURIComponent(gone.fileId) }, function () {});
+      }
+    }
+    LocalAudio.del(id, function () {});
+    if ($.recConfirm) $.recConfirm.hidden = true;
+    REC.del = null;
+    renderRecs();
+  }
+  on($.recDelYes, "click", function () { if (REC.del) dropRec(REC.del); });
+  on($.recDelNo, "click", function () { REC.del = null; if ($.recConfirm) $.recConfirm.hidden = true; });
+
   /* ══ 그리기 ══════════════════════════════════ */
   function renderAll() {
     renderOpen();
@@ -2341,7 +2835,16 @@
       backupName: backupName,
       connect: connect,
       importPublic: importPublic,
-      lock: lock
+      lock: lock,
+      flushAudio: flushAudio
+    };
+    window.__vnVoice = {
+      dictOn: function () { return DICT.on; },
+      recOn: function () { return REC.on; },
+      audio: function () { var n = findNote(S.edId); return n ? list(n.audio) : []; },
+      localSync: function (id) { var got = null; LocalAudio.get(id, function (b) { got = b; }); return !!got; },
+      maxBytes: MAX_REC_BYTES,
+      maxMs: MAX_REC_MS
     };
   } catch (e) {}
 
