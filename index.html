@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="바이브 노트">
 <title>바이브 노트</title>
-<meta name="description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트. 구글 계정으로 연결하면 기록이 내 드라이브에 저장되고, 폰과 PC 에서 같게 보입니다.">
+<meta name="description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트. 열면 바로 쓰고 이 기기에 저장됩니다. 구글 계정을 연결하면 내 드라이브로 이어집니다.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="바이브 노트">
-<meta property="og:description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트 · 개인 기록은 각자의 구글 드라이브에">
+<meta property="og:description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트 · 열면 바로, 이 기기에 저장">
 <meta property="og:image" content="https://sibssae101-glitch.github.io/vibe-note-private/icon-512.png">
 <meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest.webmanifest">
@@ -531,44 +531,19 @@
     padding:6px 9px;cursor:pointer;
   }
 
-  /* ── 첫 연결 게이트 ────────────────────────── */
-  .gate{
-    position:fixed;inset:0;z-index:60;max-width:600px;margin:0 auto;
-    display:flex;align-items:center;justify-content:center;
-    background:var(--bg);padding:24px;text-align:center;
+  /* ── 이 기기에만 저장 중 — 맨 위 얇은 한 줄. 누르면 설정이 열린다 ── */
+  .localbar{
+    position:fixed;top:0;left:0;right:0;z-index:65;max-width:600px;margin:0 auto;
+    display:block;width:100%;
+    height:calc(26px + env(safe-area-inset-top));
+    padding:env(safe-area-inset-top) 12px 0;
+    border:0;border-bottom:1px solid var(--accent-line);
+    background:var(--accent-soft);color:var(--accent);
+    font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:-.1px;
+    line-height:26px;text-align:center;cursor:pointer;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .gatebox{width:100%;max-width:400px}
-  .gatebox .eyebrow{
-    display:inline-flex;align-items:center;gap:6px;
-    font-size:10.5px;font-weight:700;letter-spacing:.9px;
-    color:var(--accent);text-transform:uppercase;
-  }
-  .gatebox .eyebrow i{
-    width:6px;height:6px;border-radius:50%;
-    background:linear-gradient(160deg,var(--accent),var(--accent-2));
-  }
-  .gtitle{
-    display:block;margin:12px 0 8px;padding-right:0;
-    font-size:22px;font-weight:800;letter-spacing:-.7px;line-height:1.32;
-    color:var(--text);word-break:keep-all;
-  }
-  .gtitle::before{content:none;display:none}
-  .gtext{margin:0 0 20px;font-size:13.5px;line-height:1.72;color:var(--dim);word-break:keep-all}
-  .gbtn{
-    width:100%;height:48px;border:0;border-radius:14px;
-    background:var(--accent);color:#fff;font-family:inherit;
-    font-size:15px;font-weight:800;cursor:pointer;
-    transition:transform .12s ease, opacity .2s ease;
-  }
-  .gbtn:active{transform:scale(.98)}
-  .gbtn:disabled{opacity:.55;cursor:default}
-  .gnote{margin:14px 0 0;font-size:11px;line-height:1.65;color:var(--dim2)}
-  .glink{
-    margin-top:12px;padding:6px;background:none;border:0;
-    color:var(--dim);font-family:inherit;font-size:12px;
-    text-decoration:underline;cursor:pointer;
-  }
-  .gerr{margin:12px 0 0;font-size:12px;line-height:1.5;color:var(--accent)}
+  .topbar.push{padding-top:calc(38px + env(safe-area-inset-top))}
 
   /* ── 설정 시트 ─────────────────────────────── */
   .sheet{position:fixed;inset:0;z-index:70;background:rgba(10,12,16,.44);display:flex;align-items:flex-end;justify-content:center}
@@ -594,6 +569,18 @@
     font-family:inherit;font-size:12.5px;
   }
   .sinput::placeholder{color:var(--dim2)}
+  .smini{display:flex;gap:8px;margin:10px 0 0}
+  .sbtn.mini{
+    flex:1;margin:0;text-align:center;padding:9px 8px;
+    font-size:11.5px;font-weight:700;color:var(--dim);
+  }
+  .sconfirm{
+    margin:12px 0 0;padding:11px 12px;border-radius:var(--r-sm);
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    font-size:11.5px;line-height:1.6;color:var(--dim);
+  }
+  .sconf-t{margin:0 0 2px;font-size:11.5px;line-height:1.6;color:var(--text);font-weight:700}
+  .sconfirm .sbtn{background:var(--card)}
   .sout{
     margin-top:16px;padding:6px 2px;background:none;border:0;
     color:var(--dim2);font-family:inherit;font-size:11px;
@@ -623,6 +610,9 @@
 </style>
 </head>
 <body>
+
+<!-- 이 기기에만 저장 중 — 누르면 설정이 열린다(구글 연결도 그 안에) -->
+<button class="localbar" id="localbar" type="button" hidden>이 기기에만 저장 중</button>
 
 <div class="topbar" id="topbar">
   <div class="brand">
@@ -681,7 +671,7 @@
       <article class="entry" id="day-card"></article>
     </section>
 
-    <p class="foot">적은 기록은 내 구글 드라이브에 저장됩니다.<br>홈 화면에 추가하면 앱처럼 열립니다.</p>
+    <p class="foot"><span id="sched-foot">적은 기록은 내 구글 드라이브에 저장됩니다.</span><br>홈 화면에 추가하면 앱처럼 열립니다.</p>
   </section>
 
   <!-- ② 브리핑 -->
@@ -720,7 +710,7 @@
       </div>
     </div>
     <div id="memo-list"></div>
-    <p class="foot" id="memo-foot">메모는 내 구글 드라이브에 저장됩니다. 쓰는 대로 바로 저장됩니다.<br>받아쓰기는 브라우저 음성인식을 씁니다.</p>
+    <p class="foot" id="memo-foot"><span id="memo-foot-where">메모는 내 구글 드라이브에 저장됩니다. 쓰는 대로 바로 저장됩니다.</span><br>받아쓰기는 브라우저 음성인식을 씁니다.</p>
   </section>
 </main>
 
@@ -776,45 +766,45 @@
   <button class="tab" id="tab-memo" type="button">메모</button>
 </nav>
 
-<!-- 첫 연결 — 이 한 번만 누르면 된다. 로그인 전에는 여기서 본문을 가린다. -->
-<div class="gate" id="gate" hidden>
-  <div class="gatebox">
-    <div class="eyebrow"><i></i>VIBE NOTE · 개인판</div>
-    <h2 class="gtitle">내 기록은<br>내 드라이브에</h2>
-    <p class="gtext">구글 계정으로 연결하면 이 노트의 기록이 내 구글 드라이브에 저장됩니다.
-      폰이든 PC든 같은 기록이 보이고, 다른 사람은 볼 수 없습니다.</p>
-    <button class="gbtn" id="gate-connect" type="button">구글 계정으로 연결</button>
-    <p class="gnote" id="gate-note">기록은 이 페이지가 아니라 내 드라이브에만 저장됩니다. 서버는 없습니다.</p>
-    <button class="glink" id="gate-cfg" type="button" hidden>구글 클라이언트 ID 넣기</button>
-    <button class="glink" id="gate-offline" type="button" hidden>이 기기에 마지막으로 저장된 기록 열기</button>
-    <p class="gerr" id="gate-err" hidden></p>
-  </div>
-</div>
-
 <!-- 설정 — 로그아웃은 여기 안쪽에 작게 -->
 <div class="sheet" id="settings" hidden>
   <div class="sheetbox">
     <h2>설정</h2>
-    <p class="srow"><b>연결</b><span id="set-who">아직 연결하지 않았습니다</span></p>
+    <p class="srow"><b>연결</b><span id="set-who">이 기기에만 저장 중</span></p>
+    <p class="srow"><b>저장 위치</b><span id="set-where">이 기기에만</span></p>
+    <button class="sbtn mini" id="set-connect" type="button">구글 계정으로 연결</button>
     <p class="srow"><b>마지막 저장</b><span id="set-when">–</span></p>
     <p class="srow"><b>이 기기 사본</b><span id="set-mirror">–</span></p>
     <p class="srow"><b>클라이언트 ID</b><span id="set-cid">아직 없음</span></p>
     <input class="sinput" id="set-cid-in" type="text" spellcheck="false" autocomplete="off"
            placeholder="…apps.googleusercontent.com" aria-label="구글 클라이언트 ID">
-    <button class="sbtn" id="set-cid-save" type="button">이 ID 로 저장</button>
-    <button class="sbtn" id="set-sync" type="button">지금 동기화</button>
-    <button class="sbtn" id="set-import" type="button">공개판에 적힌 기록 가져오기</button>
+    <div class="smini">
+      <button class="sbtn mini" id="set-cid-save" type="button">이 ID 로 저장</button>
+      <button class="sbtn mini" id="set-sync" type="button">지금 동기화</button>
+    </div>
+    <button class="sbtn" id="set-import-pub" type="button">공개판에 적힌 기록 가져오기</button>
+    <div class="smini">
+      <button class="sbtn mini" id="set-export" type="button">파일로 내보내기</button>
+      <button class="sbtn mini" id="set-import" type="button">파일에서 가져오기</button>
+    </div>
+    <input id="set-import-file" type="file" accept=".json,application/json" hidden aria-label="가져올 기록 파일">
+    <div class="sconfirm" id="imp-confirm" hidden>
+      <p class="sconf-t" id="imp-sum">지금 기록을 덮어씁니다.</p>
+      <div class="smini">
+        <button class="sbtn mini" id="imp-yes" type="button">덮어쓰기</button>
+        <button class="sbtn mini" id="imp-no" type="button">취소</button>
+      </div>
+    </div>
     <button class="sbtn" id="set-close" type="button">닫기</button>
     <button class="sout" id="set-out" type="button">로그아웃</button>
   </div>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer onload="if(window.__vnGis)window.__vnGis()"></script>
 <script id="app-js">
 (function () {
   "use strict";
 
-  /* ══ 저장소 — 기록은 각자의 구글 드라이브 한 파일에 산다 ═════════════
+  /* ══ 저장소 — 기록은 내 구글 드라이브 한 파일, 또는 로그인 없이 이 기기에만 ════
      한 JSON(DOC)에 공개판과 같은 다섯 키를 그대로 담는다.
        vn-entries-v1         { "YYYY-MM-DD": {did:[], rules:[], decided:[], todos:[{t,done}]} }
        vn-briefings-v1       { "YYYY-MM-DD": [{time, kind, title, items:[{text, tag}]}] }
@@ -822,17 +812,21 @@
        vn-notes-v1           [{id, text, created, updated, img?}]
        vn-theme              "light" | "dark"
      기기에는 DOC 사본(vnp-mirror-v1)과 기기 값(vnp-theme-local, vnp-device)만 둔다.
+     '이 기기에만'을 고르면 같은 사본(vnp-mirror-v1)에 계속 쓰고, 고른 사실을 vnp-local-mode 에 남긴다.
      액세스 토큰은 메모리에만 둔다 — localStorage 에 토큰을 남기지 않는다. */
   var DOC_KEYS = ["vn-entries-v1", "vn-briefings-v1", "vn-briefing-checks-v1", "vn-notes-v1", "vn-theme"];
   var K_ENTRY = "vn-entries-v1", K_BRIEF = "vn-briefings-v1", K_BCHK = "vn-briefing-checks-v1",
       K_NOTE = "vn-notes-v1", K_THEME = "vn-theme";
   var MIRROR_KEY = "vnp-mirror-v1", THEME_KEY = "vnp-theme-local", DEVICE_KEY = "vnp-device";
   var CID_KEY = "vnp-client-id";
+  var LINKED_KEY = "vnp-linked";              /* 한 번이라도 구글에 연결한 적이 있는가(다음에 열 때 조용히 잇기) */
+  var IMPORT_BAK = "vnp-backup-before-import-v1";  /* 파일 가져오기 전의 값을 남기는 자리 */
 
   var APP_ID = "vibe-note-private";
   var FOLDER_NAME = "vibe-note", FILE_NAME = "바이브노트.json", BACKUP_HEAD = "바이브노트-백업-";
   var CLIENT_ID = "__CLIENT_ID__";
   var SCOPE = "https://www.googleapis.com/auth/drive.file";
+  var GIS_SRC = "https://accounts.google.com/gsi/client";   /* 구글 로그인은 필요할 때만 받아 온다 */
   var DRIVE_API = "https://www.googleapis.com/drive/v3";
   var UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
   var BOUND = "vibeboundary7f3a9c";
@@ -893,7 +887,7 @@
      저장이 안 되면 기기에 남기고 위에 한 줄로 알린 뒤 다음 접속에 올린다.
      다른 기기가 더 새 파일이면 새 쪽을 쓰고, 진 쪽 사본을 드라이브에 백업으로 남긴다. */
   var Sync = {
-    mode: "locked",        /* locked | opening | live | offline | expired */
+    mode: "locked",        /* locked | opening | live | offline | expired | local */
     token: null, granted: false,
     fileId: null, folderId: null, audioFolderId: null,
     baseUpdatedAt: null, localUpdatedAt: null,
@@ -926,7 +920,7 @@
   }
 
   function saveMirror() {
-    if (!authorized() && Sync.mode !== "offline") return false;
+    if (!authorized() && Sync.mode !== "offline" && Sync.mode !== "local") return false;
     var m = {
       fileId: Sync.fileId || null,
       updatedAt: Sync.localUpdatedAt || null,
@@ -1001,9 +995,33 @@
       });
   }
 
-  /* ── 구글 로그인 (GIS 토큰) ─────────────────── */
+  /* ── 구글 로그인 (GIS 토큰) ───────────────────
+     로그인 스크립트는 처음 필요할 때만 붙인다 — '이 기기에만'으로 쓰는 동안에는
+     외부 요청이 한 번도 나가지 않는다. */
+  var gisLoad = { state: 0, wait: [] };   /* 0 없음 · 1 받는 중 · 2 됨 · 3 안 됨 */
   function gis() {
     try { return (window.google && google.accounts && google.accounts.oauth2) ? google.accounts.oauth2 : null; } catch (e) { return null; }
+  }
+  function gisReady() {
+    var q = gisLoad.wait;
+    gisLoad.wait = [];
+    for (var i = 0; i < q.length; i++) { try { q[i](); } catch (e) {} }
+  }
+  function ensureGis(cb) {
+    if (gis()) { if (cb) cb(); return; }
+    if (cb) gisLoad.wait.push(cb);
+    if (gisLoad.state === 1 || gisLoad.state === 3) { if (gisLoad.state === 3) gisReady(); return; }
+    gisLoad.state = 1;
+    var s = null;
+    try {
+      s = document.createElement("script");
+      s.src = GIS_SRC;
+      s.async = true;
+      s.defer = true;
+      s.onload = function () { gisLoad.state = gis() ? 2 : 3; gisReady(); };
+      s.onerror = function () { gisLoad.state = 3; gisReady(); };
+      document.head.appendChild(s);
+    } catch (e) { gisLoad.state = 3; gisReady(); }
   }
   /** silent=true 면 화면 없이 갱신을 시도한다. 실패하면 게이트에서 한 번 누르면 된다. */
   function askToken(silent, cb) {
@@ -1027,30 +1045,39 @@
   }
 
   function connect() {
-    if (!configured()) { gateError("이 페이지에는 아직 구글 클라이언트 ID 가 없습니다. 관리자에게 알려 주세요."); return; }
-    gateError("");
-    setGateBusy(true);
-    askToken(false, function (e, tok) {
-      setGateBusy(false);
-      if (e || !tok) { gateError("연결하지 못했습니다. 잠시 뒤 다시 눌러 주세요."); return; }
-      start(tok);
+    if (!configured()) {
+      say("이 페이지에는 아직 구글 클라이언트 ID 가 없습니다. 이 기기에 계속 저장해 두었다가, ID 를 넣으면 연결할 수 있습니다.");
+      return;
+    }
+    say("구글에 연결하는 중…", true);
+    ensureGis(function () {
+      if (!gis()) {
+        say("구글 연결 준비를 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.");
+        return;
+      }
+      askToken(false, function (e, tok) {
+        if (e || !tok) { say("연결하지 못했습니다. 이 기기에 계속 저장해 두었습니다."); return; }
+        start(tok);
+      });
     });
   }
-
   function start(tok) {
+    lsSet(LINKED_KEY, "1");   /* 이 기기에서 구글에 연결했다 — 다음에 열 때 조용히 잇는다 */
     Sync.token = tok;
     Sync.mode = "opening";
     Sync.lastError = "";
     Sync.note = "";
     renderStatus();
-    gateError("");
     pull({ open: true });
   }
 
   function trySilent() {
-    if (Sync.silentTried || authorized() || !configured()) return;
+    /* 연결한 적이 없으면 구글 쪽으로 아무 요청도 보내지 않는다 */
+    if (Sync.silentTried || authorized() || !configured() || lsGet(LINKED_KEY) !== "1") return;
     Sync.silentTried = true;
-    askToken(true, function (e, tok) { if (tok) start(tok); });
+    ensureGis(function () {
+      askToken(true, function (e, tok) { if (tok) start(tok); });
+    });
   }
 
   /* ── 드라이브 ──────────────────────────────── */
@@ -1124,6 +1151,12 @@
     return !!(Object.keys(e).length || Object.keys(b).length || Object.keys(c).length || n.length ||
               d[K_THEME] === "dark" || d[K_THEME] === "light");
   }
+  /** 사람이 쓴 내용이 있는가 — 테마만 바꿔 둔 것을 기록으로 치지 않는다(합칠 때 덮어쓰지 않게). */
+  function hasContent(d) {
+    if (!d) return false;
+    return !!(Object.keys(objOr(d[K_ENTRY], {})).length || Object.keys(objOr(d[K_BRIEF], {})).length ||
+              Object.keys(objOr(d[K_BCHK], {})).length || list(d[K_NOTE]).length);
+  }
 
   function setDoc(d) {
     DOC = emptyDoc();
@@ -1174,7 +1207,7 @@
         Sync.lastSyncedAt = nowIso();
         Sync.note = "";
         saveMirror();
-        if (Sync.mode !== "live" || ($.gate && !$.gate.hidden)) { Sync.mode = "live"; unlock(); }
+        if (Sync.mode !== "live") { Sync.mode = "live"; unlock(); }
         else renderStatus();
         if (Sync.queued) { Sync.queued = false; if (Sync.dirty) push({}); }
       });
@@ -1210,7 +1243,7 @@
           say("드라이브 파일을 읽지 못했습니다. 이 기기 기록으로 계속 씁니다.", true);
           return;
         }
-        var pending = Sync.dirty && MIRROR && hasData(MIRROR.data);
+        var pending = Sync.dirty && MIRROR && hasContent(MIRROR.data);
         if (!pending) { adopt(remote); return; }
         hydrateLocal();   /* 비교하고 올릴 것은 이 기기에 남은 기록이다 */
         var cmp = tsOf(Sync.localUpdatedAt) - tsOf(remote.updatedAt);
@@ -1343,56 +1376,60 @@
   function applyClientId() {
     var v = $.setCidIn ? $.setCidIn.value : "";
     if (!saveClientId(v)) {
-      gateError("클라이언트 ID 를 다시 확인해 주세요.");
       say("클라이언트 ID 를 다시 확인해 주세요.");
       return false;
     }
     if ($.setCidIn) $.setCidIn.value = "";
     renderSettings();
-    applyClientIdNote();
     return true;
   }
-  function applyClientIdNote() {
-    gateError(configured() ? "" : "클라이언트 ID 를 먼저 넣어 주세요.");
+
+  /* ══ 이 기기에만 — 열면 바로 이 모드다. 로그인도 모드 선택도 없다 ══════
+     저장은 기기 사본(vnp-mirror-v1, 다섯 키 그대로)에 한다. 오디오는 IndexedDB.
+     설정에서 구글에 연결하면 이 사본을 드라이브 파일과 합친다(새 쪽 우선·진 쪽 백업). */
+
+  /** 맨 위 얇은 한 줄 — '이 기기에만'일 때만. 누르면 설정이 열린다. */
+  function renderLocalBar() {
+    var on = (Sync.mode === "local");
+    if ($.localbar) $.localbar.hidden = !on;
+    if ($.topbar) $.topbar.className = "topbar" + (on ? " push" : "");
   }
 
-  function setGateBusy(on) {
-    var b = $.gateConnect;
-    if (!b) return;
-    b.disabled = !!on;
-    b.textContent = on ? "연결하는 중…" : "구글 계정으로 연결";
+  function startLocal() {
+    Sync.token = null;
+    Sync.mode = "local";
+    Sync.busy = false;
+    Sync.note = "";
+    if (MIRROR && MIRROR.data) setDoc(MIRROR.data);
+    else setDoc(null);
+    if (MIRROR && MIRROR.fileId) Sync.fileId = MIRROR.fileId;
+    if (MIRROR && MIRROR.base) Sync.baseUpdatedAt = MIRROR.base;
+    if (MIRROR && MIRROR.updatedAt) Sync.localUpdatedAt = MIRROR.updatedAt;
+    Sync.dirty = hasContent(DOC);   /* 나중에 연결하면 이 기록을 드라이브와 합칠 대상으로 본다 */
+    var t = DOC[K_THEME];
+    if (t === "dark" || t === "light") { applyTheme(t); lsSet(THEME_KEY, t); }
+    saveMirror();
+    unlock();
   }
-  function gateError(msg) {
-    var e = $.gateErr;
-    if (!e) return;
-    e.textContent = msg || "";
-    e.hidden = !msg;
-  }
-  function lock() {
-    if ($.gate) $.gate.hidden = false;
-    if ($.main) $.main.hidden = true;
-    if ($.tabs) $.tabs.hidden = true;
-    if ($.topbar) $.topbar.hidden = true;   /* 게이트가 머리줄까지 덮는다(겹침 방지) */
-    Sync.mode = Sync.mode === "offline" ? "offline" : (authorized() ? Sync.mode : "locked");
-    var off = $.gateOffline;
-    if (off) {
-      var has = !!(MIRROR && hasData(MIRROR.data));
-      var down = false;
-      try { down = (navigator.onLine === false); } catch (e) { down = false; }
-      off.hidden = !(has && down);
-    }
-    setGateBusy(Sync.mode === "opening");
-    renderSettings();
-    renderStatus();
+
+  function renderFoot() {
+    var local = (Sync.mode === "local");
+    if ($.schedFoot) $.schedFoot.textContent = local
+      ? "적은 기록은 이 기기에 저장됩니다. 구글에 연결하면 드라이브로 합칩니다."
+      : "적은 기록은 내 구글 드라이브에 저장됩니다.";
+    if ($.memoFootWhere) $.memoFootWhere.textContent = local
+      ? "메모는 이 기기에 저장됩니다. 쓰는 대로 바로 저장됩니다."
+      : "메모는 내 구글 드라이브에 저장됩니다. 쓰는 대로 바로 저장됩니다.";
   }
   function unlock() {
-    if ($.gate) $.gate.hidden = true;
     if ($.main) $.main.hidden = false;
     if ($.tabs) $.tabs.hidden = false;
     if ($.topbar) $.topbar.hidden = false;
     renderAll();
     renderStatus();
     renderSettings();
+    renderLocalBar();
+    renderFoot();
     try { flushAudio(); } catch (e) {}
   }
 
@@ -1400,10 +1437,23 @@
     Sync.note = msg || "";
     Sync.noteSticky = !!sticky;
     renderStatus();
+    if (msg && !sticky) {          /* 잠깐 알리고 스스로 사라진다 */
+      var m = msg;
+      later(function () {
+        if (Sync.note === m) { Sync.note = ""; renderStatus(); }
+      }, 6000);
+    }
   }
   function renderStatus() {
     var bar = $.syncbar, tx = $.synctext, fix = $.syncfix;
     if (!bar) return;
+    if (Sync.mode === "local") {   /* '이 기기에만'은 맨 위 줄이 알린다 — 여기서는 안내만 */
+      var lm = Sync.note || "";
+      bar.hidden = !lm;
+      if (tx) tx.textContent = lm;
+      if (fix) fix.hidden = true;
+      return;
+    }
     var msg = "";
     if (!authorized() && Sync.mode !== "offline") {
       msg = "";
@@ -1424,15 +1474,21 @@
   /* ══ 설정 — 로그아웃은 여기 안쪽에 작게 ══════════════════════ */
   function openSettings() {
     renderSettings();
+    if ($.impConfirm && !PENDING_IMPORT) $.impConfirm.hidden = true;
     if ($.settings) $.settings.hidden = false;
   }
   function closeSettings() { if ($.settings) $.settings.hidden = true; }
   function renderSettings() {
     if ($.setWho) {
       if (authorized()) $.setWho.textContent = "구글 드라이브에 연결됨";
+      else if (Sync.mode === "local") $.setWho.textContent = "로그인 없이 이 기기에만";
       else if (Sync.mode === "offline") $.setWho.textContent = "오프라인 (이 기기에만 저장)";
       else if (Sync.mode === "expired") $.setWho.textContent = "연결 만료 — 다시 연결 필요";
       else $.setWho.textContent = "아직 연결하지 않았습니다";
+    }
+    if ($.setWhere) {
+      $.setWhere.textContent = authorized() ? "내 구글 드라이브"
+        : (Sync.mode === "local" ? "이 기기에만" : "–");
     }
     if ($.setWhen) {
       $.setWhen.textContent = Sync.lastSyncedAt ? whenLabel(new Date(Sync.lastSyncedAt).getTime()) : "–";
@@ -1447,17 +1503,14 @@
     }
     if ($.setOut) $.setOut.hidden = !authorized();
     if ($.setCid) $.setCid.textContent = configured() ? "넣었습니다" : "아직 없음";
-    if ($.gateCfg) $.gateCfg.hidden = configured();
+    if ($.setConnect) $.setConnect.hidden = authorized();
   }
   function signOut() {
     Sync.token = null;   /* 이 기기에서만 잊는다 — 계정 권한은 건드리지 않는다 */
-    Sync.mode = "locked";
     Sync.note = "";
-    DOC = emptyDoc();
-    rebind();
+    lsDel(LINKED_KEY);   /* 다음에 열면 조용히 다시 잇지 않는다 */
     closeSettings();
-    renderAll();
-    lock();
+    startLocal();        /* 기기 사본 그대로 '이 기기에만'으로 이어 쓴다 */
   }
 
   /* 공개판(같은 github.io)에 적어 둔 기록이 있으면 이 드라이브로 가져온다.
@@ -1491,16 +1544,126 @@
     say("공개판에 적힌 기록 " + got + "건을 가져왔습니다.");
   }
 
+  /* ══ 파일로 내보내기 / 파일에서 가져오기 — 기기 사이를 손으로 옮기는 최소 통로 ══
+     내보내기: 다섯 키 그대로 JSON 한 파일. 오디오 본체는 담지 않는다(메모의 이름·길이는 메타로 남는다).
+     가져오기: 병합하지 않는다 — 확인 후 덮어쓰기. 덮어쓰기 전 값은 vnp-backup-before-import-v1 에 남긴다. */
+  var PENDING_IMPORT = null;
+
+  function exportDoc() {
+    var d = buildDoc(nowIso(), deviceId());
+    return { app: APP_ID, version: 1, kind: "vibe-note-export", exportedAt: d.updatedAt, device: d.device, data: d.data };
+  }
+  function exportText() { return JSON.stringify(exportDoc(), null, 2); }
+  function exportName(iso) {
+    var d = iso ? new Date(iso) : new Date();
+    if (isNaN(d.getTime())) d = new Date();
+    return "바이브노트-내보내기-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" +
+      pad(d.getHours()) + pad(d.getMinutes()) + ".json";
+  }
+  function downloadText(name, text) {
+    try {
+      if (!window.Blob || !window.URL || !URL.createObjectURL) return false;
+      var url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+      if (!url) return false;
+      var a = document.createElement("a");
+      a.setAttribute("href", url);
+      a.setAttribute("download", name);
+      document.body.appendChild(a);
+      if (a.click) a.click();
+      later(function () {
+        try {
+          if (a.parentNode) a.parentNode.removeChild(a);
+          if (URL.revokeObjectURL) URL.revokeObjectURL(url);
+        } catch (e) {}
+      }, 1000);
+      return true;
+    } catch (e) { return false; }
+  }
+  function doExport() {
+    var ok = downloadText(exportName(), exportText());
+    say(ok ? "파일로 내보냈습니다. 내려받기 폴더를 보세요." : "파일로 내보내지 못했습니다.");
+    closeSettings();
+    return ok;
+  }
+
+  function parseImport(text) {
+    var o = null;
+    try { o = JSON.parse(String(text == null ? "" : text)); } catch (e) { o = null; }
+    if (!o || typeof o !== "object") return null;
+    var d = objOr(o.data, null), i, any = false;
+    if (!d) {
+      d = {};
+      for (i = 0; i < DOC_KEYS.length; i++) {
+        if (o[DOC_KEYS[i]] != null) { d[DOC_KEYS[i]] = o[DOC_KEYS[i]]; any = true; }
+      }
+      if (!any) return null;
+    }
+    any = false;
+    for (i = 0; i < DOC_KEYS.length; i++) if (d[DOC_KEYS[i]] != null) { any = true; break; }
+    if (!any) return null;
+    return { updatedAt: typeof o.updatedAt === "string" ? o.updatedAt : "", data: d };
+  }
+  function importSummary(d) {
+    return "일정 " + Object.keys(objOr(d[K_ENTRY], {})).length + "일 · 브리핑 " +
+      Object.keys(objOr(d[K_BRIEF], {})).length + "일 · 메모 " + list(d[K_NOTE]).length + "개";
+  }
+  /** 파일을 골라 읽은 뒤 — 바로 덮어쓰지 않고 확인 줄을 띄운다. */
+  function askImport(text) {
+    var p = parseImport(text);
+    if (!p) { say("가져올 수 있는 바이브 노트 파일이 아닙니다."); return false; }
+    PENDING_IMPORT = p;
+    if ($.impSum) $.impSum.textContent = "지금 기록을 덮어씁니다 — " + importSummary(p.data);
+    if ($.impConfirm) $.impConfirm.hidden = false;
+    if ($.settings) $.settings.hidden = false;
+    return true;
+  }
+  function applyImport(p) {
+    if (!p || !p.data) return false;
+    var bak = { savedAt: nowIso(), data: {} }, i;
+    for (i = 0; i < DOC_KEYS.length; i++) bak.data[DOC_KEYS[i]] = DOC[DOC_KEYS[i]];
+    lsSet(IMPORT_BAK, JSON.stringify(bak));
+    setDoc(p.data);
+    Sync.dirty = true;
+    touch();
+    var t = DOC[K_THEME];
+    if (t === "dark" || t === "light") { applyTheme(t); lsSet(THEME_KEY, t); }
+    PENDING_IMPORT = null;
+    if ($.impConfirm) $.impConfirm.hidden = true;
+    renderAll();
+    renderStatus();
+    renderFoot();
+    closeSettings();
+    say("파일에서 기록을 가져왔습니다. 덮어쓰기 전 값은 기기에 백업해 두었습니다.");
+    return true;
+  }
+  function pickImportFile() {
+    if (!$.impFile) { say("이 브라우저에서는 파일을 고를 수 없습니다."); return; }
+    try { $.impFile.value = ""; } catch (e) {}
+    try { if ($.impFile.click) $.impFile.click(); } catch (e) {}
+  }
+  function readImportFile(file) {
+    if (!file) return;
+    var fr = null;
+    try { fr = new FileReader(); } catch (e) { fr = null; }
+    if (!fr) { say("이 브라우저에서는 파일을 읽지 못합니다."); return; }
+    fr.onload = function () { askImport(String(fr.result == null ? "" : fr.result)); };
+    fr.onerror = function () { say("파일을 읽지 못했습니다."); };
+    try { fr.readAsText(file); } catch (e) { say("파일을 읽지 못했습니다."); }
+  }
+
   /* ══ 화면 요소 ═══════════════════════════════ */
   function id(x) { return document.getElementById(x); }
   var $ = {
-    theme: id("theme"), setBtn: id("set-btn"),
-    gate: id("gate"), gateConnect: id("gate-connect"), gateOffline: id("gate-offline"), gateErr: id("gate-err"),
+    theme: id("theme"), setBtn: id("set-btn"), localbar: id("localbar"),
     main: id("main"), tabs: id("tabs"), topbar: id("topbar"),
     syncbar: id("syncbar"), synctext: id("synctext"), syncfix: id("syncfix"),
     settings: id("settings"), setWho: id("set-who"), setWhen: id("set-when"), setMirror: id("set-mirror"),
-    setCid: id("set-cid"), setCidIn: id("set-cid-in"), setCidSave: id("set-cid-save"), gateCfg: id("gate-cfg"),
-    setSync: id("set-sync"), setImport: id("set-import"), setClose: id("set-close"), setOut: id("set-out"),
+    setWhere: id("set-where"),
+    setCid: id("set-cid"), setCidIn: id("set-cid-in"), setCidSave: id("set-cid-save"), setConnect: id("set-connect"),
+    setSync: id("set-sync"), setImportPub: id("set-import-pub"), setClose: id("set-close"), setOut: id("set-out"),
+    setExport: id("set-export"), setImport: id("set-import"), impFile: id("set-import-file"),
+    impConfirm: id("imp-confirm"), impSum: id("imp-sum"), impYes: id("imp-yes"), impNo: id("imp-no"),
+    schedFoot: id("sched-foot"), memoFootWhere: id("memo-foot-where"),
     notice: id("notice"), noticeClear: id("notice-clear"),
     paneS: id("pane-schedule"), paneB: id("pane-brief"), paneM: id("pane-memo"),
     tabS: id("tab-schedule"), tabB: id("tab-brief"), tabM: id("tab-memo"),
@@ -2680,7 +2843,8 @@
       var play = btn("rbtn", "▶", "녹음 재생");
       var mid = E("div", "rmeta");
       mid.appendChild(E("div", "rt", "녹음 " + durText(a.ms)));
-      if (!a.up) mid.appendChild(E("span", "rwait", "아직 안 올라감"));
+      if (!a.up) mid.appendChild(E("span", "rwait",
+        Sync.mode === "local" ? "이 기기에만" : "아직 안 올라감"));
       var del = btn("rbtn del", "×", "이 녹음 지우기");
       card.appendChild(play);
       card.appendChild(mid);
@@ -2752,32 +2916,16 @@
     DOC = emptyDoc();
     rebind();
     renderAll();
-    lock();
-    renderStatus();
     var t = lsGet(THEME_KEY);
     if (t === "dark" || t === "light") applyTheme(t);
-    if (!configured()) return;
     window.__vnGis = function () { trySilent(); };
-    if (gis()) { trySilent(); return; }
-    var tries = 0;
-    (function tick() {
-      if (gis()) { trySilent(); return; }
-      if (++tries > 20) return;
-      later(tick, 500);
-    })();
+    startLocal();          /* 열면 곧장 일정 탭 · 이 기기에 저장 · 바로 쓸 수 있다 */
+    if (!configured() || lsGet(LINKED_KEY) !== "1") return;   /* 연결한 적 없으면 밖으로 나가지 않는다 */
+    ensureGis(function () { if (gis()) trySilent(); });
   }
 
-  on($.gateConnect, "click", function () { connect(); });
-  on($.gateOffline, "click", function () {
-    if (!MIRROR || !MIRROR.data) return;
-    var wasDirty = !!MIRROR.dirty;
-    Sync.mode = "offline";
-    adopt({ data: MIRROR.data, updatedAt: MIRROR.updatedAt });
-    Sync.mode = "offline";
-    Sync.dirty = wasDirty;
-    saveMirror();
-    renderStatus();
-  });
+  on($.localbar, "click", function () { openSettings(); });
+  on($.setConnect, "click", function () { connect(); });
   on($.syncfix, "click", function () {
     if (Sync.mode === "expired") { Sync.silentTried = false; askToken(false, function (e, tok) { if (tok) start(tok); }); return; }
     if (authorized()) pull({}); else connect();
@@ -2791,11 +2939,22 @@
     pull({});
     closeSettings();
   });
-  on($.setImport, "click", function () { importPublic(); });
+  on($.setImportPub, "click", function () { importPublic(); });
+  on($.setExport, "click", function () { doExport(); });
+  on($.setImport, "click", function () { pickImportFile(); });
+  on($.impFile, "change", function () {
+    var f = null;
+    try { f = ($.impFile.files && $.impFile.files[0]) || null; } catch (e) { f = null; }
+    readImportFile(f);
+  });
+  on($.impYes, "click", function () { applyImport(PENDING_IMPORT); });
+  on($.impNo, "click", function () {
+    PENDING_IMPORT = null;
+    if ($.impConfirm) $.impConfirm.hidden = true;
+  });
   on($.setCidSave, "click", function () {
     if (applyClientId()) { closeSettings(); if (configured()) trySilent(); }
   });
-  on($.gateCfg, "click", function () { openSettings(); if ($.setCidIn) $.setCidIn.focus(); });
   on($.setOut, "click", function () { signOut(); });
 
   try {
@@ -2835,8 +2994,18 @@
       backupName: backupName,
       connect: connect,
       importPublic: importPublic,
-      lock: lock,
-      flushAudio: flushAudio
+      flushAudio: flushAudio,
+      startLocal: startLocal,
+      linkedKey: LINKED_KEY,
+      linked: function () { return lsGet(LINKED_KEY) === "1"; },
+      importBackupKey: IMPORT_BAK,
+      exportText: exportText,
+      exportName: exportName,
+      doExport: doExport,
+      askImport: askImport,
+      importYes: function () { return applyImport(PENDING_IMPORT); },
+      pendingImport: function () { return PENDING_IMPORT; },
+      gisLoaded: function () { return gisLoad.state !== 0; }
     };
     window.__vnVoice = {
       dictOn: function () { return DICT.on; },

@@ -1,7 +1,7 @@
 /* 바이브 노트 개인판 — 오프라인 캐시.
    화면(index.html)은 열 때마다 새로 받아 본다(네트워크 우선). 그래야 고친 것이 바로 반영된다.
    인터넷이 없으면 캐시로 열린다. 아이콘·매니페스트 같은 껍데기는 캐시를 먼저 쓴다. */
-var CACHE = "vibe-note-private-v2";
+var CACHE = "vibe-note-private-v3";
 var ASSETS = [
   "./",
   "./index.html",
