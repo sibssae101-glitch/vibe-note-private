@@ -1,5 +1,7 @@
-/* 바이브 노트 — 오프라인 캐시. 파일을 고치면 CACHE 이름의 숫자를 올린다. */
-var CACHE = "vibe-note-private-v1";
+/* 바이브 노트 개인판 — 오프라인 캐시.
+   화면(index.html)은 열 때마다 새로 받아 본다(네트워크 우선). 그래야 고친 것이 바로 반영된다.
+   인터넷이 없으면 캐시로 열린다. 아이콘·매니페스트 같은 껍데기는 캐시를 먼저 쓴다. */
+var CACHE = "vibe-note-private-v2";
 var ASSETS = [
   "./",
   "./index.html",
@@ -34,7 +36,25 @@ self.addEventListener("fetch", function (e) {
   if (req.method !== "GET") return;
   var url;
   try { url = new URL(req.url); } catch (err) { return; }
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin) return;   /* 드라이브·구글 요청은 건드리지 않는다 */
+
+  /* 화면은 네트워크 우선 — 없으면 캐시 */
+  if (req.mode === "navigate") {
+    e.respondWith(
+      fetch(req).then(function (res) {
+        if (res && res.status === 200) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put("./index.html", copy); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match("./index.html").then(function (hit) {
+          return hit || caches.match("./");
+        });
+      })
+    );
+    return;
+  }
 
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then(function (hit) {
@@ -46,7 +66,6 @@ self.addEventListener("fetch", function (e) {
         }
         return res;
       }).catch(function () {
-        if (req.mode === "navigate") return caches.match("./index.html");
         return caches.match("./index.html");
       });
     })
