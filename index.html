@@ -274,6 +274,8 @@
   }
   .badge.done{color:var(--ok);background:var(--ok-soft);border-color:transparent}
   .when{margin:3px 0 0;font-size:11.5px;color:var(--dim2);font-weight:600}
+  .when.ok{color:var(--ok)}
+  .when.bad{color:var(--accent)}
   .lab{
     display:block;margin:15px 0 4px;
     font-size:10.5px;font-weight:800;letter-spacing:.7px;color:var(--accent);
@@ -398,7 +400,10 @@
     flex:1;min-width:0;text-align:center;
     font-size:12px;font-weight:700;color:var(--dim2);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    transition:color .2s ease;
   }
+  .edwhen.saved{color:var(--ok)}
+  .edwhen.failed{color:var(--accent)}
   .edconfirm{
     display:flex;align-items:center;gap:8px;padding:10px 14px;
     background:var(--accent-soft);border-bottom:1px solid var(--accent-line);
@@ -1329,7 +1334,7 @@
   function saveRec(k, r) {
     if (!r || isEmpty(r)) delete DB.entries[k];
     else DB.entries[k] = r;
-    writeObj(K_ENTRY, DB.entries);
+    return writeObj(K_ENTRY, DB.entries);
   }
   function hasRec(k) { return !isEmpty(rec(k)); }
   /* 브리핑 — 날짜별 {time, kind, title, items:[{text, tag}]} */
@@ -1354,7 +1359,11 @@
     if (SECS.indexOf(sec) < 0) sec = "did";
     if (sec === "todos") r.todos.push({ t: t, done: false });
     else r[sec].push({ t: t });
-    saveRec(k, r);
+    if (!saveRec(k, r)) {          /* 못 남겼으면 화면에도 올리지 않는다 */
+      if (sec === "todos") r.todos.pop(); else r[sec].pop();
+      saveRec(k, r);
+      return false;
+    }
     return true;
   }
   function dropLine(k, sec, i) {
@@ -1693,7 +1702,8 @@
     schedDate: todayKey(), schedY: 0, schedM: 0,
     briefDate: todayKey(), briefY: 0, briefM: 0, briefCalOpen: false,
     edId: null,
-    addSec: "did", draft: ""
+    addSec: "did", draft: "",
+    savedDate: "", savedAt: 0, saveFail: false
   };
   (function () {
     var p = parts(S.schedDate); S.schedY = p.y; S.schedM = p.m;
@@ -1877,7 +1887,18 @@
     if (k === t0) rel = " · 오늘";
     else if (k === shiftKey(t0, -1)) rel = " · 어제";
     else if (k === shiftKey(t0, 1)) rel = " · 내일";
-    box.appendChild(E("p", "when", parts(k).y + "년" + rel));
+    /* 저장 확인은 이 기존 줄에 붙는다 — 요소를 더하지 않는다 */
+    var wline = E("p", "when", parts(k).y + "년" + rel);
+    if (S.savedDate === k) {
+      if (S.saveFail) {
+        wline.className = "when bad";
+        wline.textContent += " · 저장하지 못했습니다";
+      } else if (S.savedAt) {
+        wline.className = "when ok";
+        wline.textContent += " · 저장됨 " + ampm(new Date(S.savedAt));
+      }
+    }
+    box.appendChild(wline);
 
     SECS.forEach(function (sec) {
       box.appendChild(E("p", "lab", SEC_LABEL[sec]));
@@ -1911,9 +1932,11 @@
     function submit() {
       var v = (inp.value || "").replace(/^\s+|\s+$/g, "");
       if (!v) return;
-      addLine(k, S.addSec, v);
-      S.draft = "";
-      inp.value = "";
+      var ok = addLine(k, S.addSec, v);
+      S.savedDate = k;
+      S.savedAt = ok ? Date.now() : 0;
+      S.saveFail = !ok;
+      S.draft = ok ? "" : v;   /* 못 남겼으면 적은 글을 그대로 둔다 — 다시 누르면 들어간다 */
       renderDay();
       renderOpen();
       renderSchedCal();
@@ -1934,6 +1957,7 @@
     var p = parts(k);
     S.schedY = p.y; S.schedM = p.m;
     S.draft = "";
+    S.savedDate = ""; S.savedAt = 0; S.saveFail = false;
     renderDay();
     renderSchedCal();
     try { if ($.dayCard && $.dayCard.scrollIntoView) $.dayCard.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
@@ -2115,6 +2139,26 @@
     try { return Number(window.innerWidth) <= 520; } catch (e) { return true; }
   }
 
+  /* ══ 저장 확인 표시 — 저장 버튼 대신 화면에 바로 보이게 ═════════
+     편집기 위 한 줄(ed-when)을 그대로 쓴다. 요소를 늘리지 않고 글과 색만 바꾼다.
+     누르는 것을 늘리지 않는 것이 이 화면의 약속이다(고치면 바로 저장). */
+  function edSaved(ts) {
+    if (!$.edWhen) return;
+    $.edWhen.className = "edwhen saved";
+    $.edWhen.textContent = "저장됨 · " + ampm(new Date(Number(ts) || Date.now()));
+  }
+  function edSaveFailed() {
+    if (!$.edWhen) return;
+    $.edWhen.className = "edwhen failed";
+    $.edWhen.textContent = "저장하지 못했습니다";
+  }
+  /** 열었을 때 — 그 메모를 마지막으로 저장한 때 */
+  function edOpened(n) {
+    if (!$.edWhen) return;
+    $.edWhen.className = "edwhen";
+    $.edWhen.textContent = whenLabel((n && (n.updated || n.created)) || Date.now());
+  }
+
   function renderMemos() {
     if (!$.memoList) return;
     var arr = sortedNotes();
@@ -2169,7 +2213,7 @@
     if (!n) n = newMemo();
     S.edId = n.id;
     if ($.edText) $.edText.value = n.text || "";
-    if ($.edWhen) $.edWhen.textContent = whenLabel(n.updated || n.created);
+    edOpened(n);
     if ($.edConfirm) $.edConfirm.hidden = true;
     if ($.edDel) $.edDel.hidden = false;
     showEditorImage();
@@ -2196,7 +2240,8 @@
       } else if (t !== n.text) {
         n.text = t;
         n.updated = Date.now();
-        saveNotes();
+        /* 나가면서 하는 저장도 조용히 넘기지 않는다 — 편집기는 닫히니 위 줄에 알린다 */
+        if (!saveNotes()) say("저장하지 못했습니다. 이 기기에 기록을 남기지 못했습니다.", true);
       }
     }
     S.edId = null;
@@ -2214,8 +2259,8 @@
     if (!n) return;
     n.text = String(($.edText && $.edText.value) || "");
     n.updated = Date.now();
-    saveNotes();
-    if ($.edWhen) $.edWhen.textContent = whenLabel(n.updated);
+    if (saveNotes()) edSaved(n.updated);
+    else edSaveFailed();
   }
   on($.edText, "input", function () { pushEditorText(); });
   on($.edDel, "click", function () {
@@ -2265,6 +2310,13 @@
   function drawHint(msg) {
     if (!$.drawHint) return;
     $.drawHint.textContent = msg || "S펜으로 쓰세요. 손가락은 그리지 않습니다. ";
+    if ($.drawAny) $.drawHint.appendChild($.drawAny);
+  }
+
+  /** 손글씨 판 아래 같은 줄에 저장 확인 — 판이 편집기를 덮고 있어 이 줄만 보인다 */
+  function drawSaved(ts) {
+    if (!$.drawHint) return;
+    $.drawHint.textContent = "저장됨 · " + ampm(new Date(Number(ts) || Date.now())) + " — S펜으로 쓰세요. ";
     if ($.drawAny) $.drawHint.appendChild($.drawAny);
   }
 
@@ -2349,17 +2401,22 @@
       if (n.img) {
         delete n.img;
         n.updated = Date.now();
-        saveNotes();
+        if (saveNotes()) { edSaved(n.updated); drawSaved(n.updated); }
+        else { edSaveFailed(); drawHint("저장하지 못했습니다. 긴 메모를 정리해 보세요. "); }
         showEditorImage();
       }
       return;
     }
     var url = "";
     try { url = D.canvas.toDataURL("image/png"); } catch (e) { url = ""; }
-    if (!url) { drawHint("그림을 저장하지 못했습니다. "); return; }
+    if (!url) { drawHint("그림을 저장하지 못했습니다. "); edSaveFailed(); return; }
     n.img = url;
     n.updated = Date.now();
-    if (!saveNotes()) drawHint("저장 공간이 부족해 그림을 남기지 못했습니다. 긴 메모를 정리해 보세요. ");
+    if (saveNotes()) { edSaved(n.updated); drawSaved(n.updated); }
+    else {
+      drawHint("저장 공간이 부족해 그림을 남기지 못했습니다. 긴 메모를 정리해 보세요. ");
+      edSaveFailed();
+    }
     showEditorImage();
   }
 
