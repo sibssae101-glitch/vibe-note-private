@@ -1010,8 +1010,8 @@
   function ensureGis(cb) {
     if (gis()) { if (cb) cb(); return; }
     if (cb) gisLoad.wait.push(cb);
-    if (gisLoad.state === 1 || gisLoad.state === 3) { if (gisLoad.state === 3) gisReady(); return; }
-    gisLoad.state = 1;
+    if (gisLoad.state === 1) return;      /* 이미 받는 중 */
+    gisLoad.state = 1;                    /* 실패했어도 다음에 누르면 다시 시도한다 */
     var s = null;
     try {
       s = document.createElement("script");
