@@ -506,8 +506,13 @@
     width:6px;height:6px;border-radius:50%;
     background:linear-gradient(160deg,var(--accent),var(--accent-2));
   }
-  .gtitle{margin:12px 0 8px;font-size:22px;font-weight:800;letter-spacing:-.7px;line-height:1.3}
-  .gtext{margin:0 0 20px;font-size:13.5px;line-height:1.72;color:var(--dim)}
+  .gtitle{
+    display:block;margin:12px 0 8px;padding-right:0;
+    font-size:22px;font-weight:800;letter-spacing:-.7px;line-height:1.32;
+    color:var(--text);word-break:keep-all;
+  }
+  .gtitle::before{content:none;display:none}
+  .gtext{margin:0 0 20px;font-size:13.5px;line-height:1.72;color:var(--dim);word-break:keep-all}
   .gbtn{
     width:100%;height:48px;border:0;border-radius:14px;
     background:var(--accent);color:#fff;font-family:inherit;
@@ -1312,6 +1317,7 @@
     if ($.gate) $.gate.hidden = false;
     if ($.main) $.main.hidden = true;
     if ($.tabs) $.tabs.hidden = true;
+    if ($.topbar) $.topbar.hidden = true;   /* 게이트가 머리줄까지 덮는다(겹침 방지) */
     Sync.mode = Sync.mode === "offline" ? "offline" : (authorized() ? Sync.mode : "locked");
     var off = $.gateOffline;
     if (off) {
@@ -1328,6 +1334,7 @@
     if ($.gate) $.gate.hidden = true;
     if ($.main) $.main.hidden = false;
     if ($.tabs) $.tabs.hidden = false;
+    if ($.topbar) $.topbar.hidden = false;
     renderAll();
     renderStatus();
     renderSettings();
@@ -1433,7 +1440,7 @@
   var $ = {
     theme: id("theme"), setBtn: id("set-btn"),
     gate: id("gate"), gateConnect: id("gate-connect"), gateOffline: id("gate-offline"), gateErr: id("gate-err"),
-    main: id("main"), tabs: id("tabs"),
+    main: id("main"), tabs: id("tabs"), topbar: id("topbar"),
     syncbar: id("syncbar"), synctext: id("synctext"), syncfix: id("syncfix"),
     settings: id("settings"), setWho: id("set-who"), setWhen: id("set-when"), setMirror: id("set-mirror"),
     setCid: id("set-cid"), setCidIn: id("set-cid-in"), setCidSave: id("set-cid-save"), gateCfg: id("gate-cfg"),
