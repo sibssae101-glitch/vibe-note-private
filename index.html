@@ -446,7 +446,9 @@
   .drawhint{
     margin:0;padding:0 14px calc(14px + env(safe-area-inset-bottom));
     text-align:center;font-size:11.5px;line-height:1.7;color:var(--dim2);
+    transition:color .2s ease;
   }
+  .drawhint.ok{color:var(--ok);font-weight:700}
   .linkbtn{
     font-family:inherit;font-size:11.5px;font-weight:800;color:var(--accent);
     background:none;border:0;padding:2px 4px;cursor:pointer;text-decoration:underline;
@@ -470,6 +472,23 @@
   }
   .tbtn.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
   .tbtn.rec{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* 라벨이 '🎤 받아쓰기' ↔ '■ 그만' 으로 바뀌어도 옆 버튼이 움직이지 않게 */
+  #ed-dict{min-width:108px;text-align:center}
+  /* 받아쓰는 중 — 편집기 바로 아래 한 줄. 말하는 중인 문장은 흐리게, 점은 마이크가 살아 있다는 표시 */
+  .edlive{
+    flex:0 0 auto;display:flex;align-items:center;gap:7px;
+    margin:0;padding:6px 14px;background:var(--bg-soft);border-top:1px solid var(--line);
+    font-size:12.5px;line-height:1.5;color:var(--dim);
+  }
+  .edlive .ld{
+    flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--accent);
+    animation:ldblink 1.2s ease-in-out infinite;
+  }
+  .edlive .lt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .edlive.wait .lt{color:var(--dim2)}
+  .edlive.got .lt{color:var(--dim)}
+  @keyframes ldblink{0%,100%{opacity:1}50%{opacity:.22}}
+  @media (prefers-reduced-motion:reduce){.edlive .ld{animation:none}}
   .rectime{
     margin-left:auto;font-size:12px;font-weight:800;color:var(--accent);
     font-variant-numeric:tabular-nums;
@@ -771,6 +790,7 @@
     <textarea id="ed-text" placeholder="여기에 그냥 쓰세요. 쓰는 대로 남습니다." aria-label="메모 본문"></textarea>
     <img class="edimg" id="ed-img" alt="손글씨 그림" hidden>
   </div>
+  <p class="edlive" id="ed-live" hidden><span class="ld" aria-hidden="true"></span><span class="lt" id="ed-live-text"></span></p>
   <div class="reclist" id="rec-list" hidden></div>
   <div class="edtools">
     <button class="tbtn" id="ed-dict" type="button" aria-pressed="false">🎤 받아쓰기</button>
@@ -1737,6 +1757,7 @@
     edDelYes: id("ed-del-yes"), edDelNo: id("ed-del-no"), edText: id("ed-text"),
     edPen: id("ed-pen"), edImg: id("ed-img"),
     edDict: id("ed-dict"), edRec: id("ed-rec"), recTime: id("rec-time"), recList: id("rec-list"),
+    edLive: id("ed-live"), edLiveText: id("ed-live-text"),
     edMsg: id("ed-msg"), recConfirm: id("rec-confirm"), recDelYes: id("rec-del-yes"), recDelNo: id("rec-del-no"),
     drawPanel: id("draw-panel"), drawCanvas: id("draw-canvas"), canvasWrap: id("canvas-wrap"),
     drawPen: id("draw-pen"), drawErase: id("draw-erase"), drawUndo: id("draw-undo"),
@@ -2472,6 +2493,7 @@
 
   function drawHint(msg) {
     if (!$.drawHint) return;
+    $.drawHint.className = "drawhint";
     $.drawHint.textContent = msg || "S펜으로 쓰세요. 손가락은 그리지 않습니다. ";
     if ($.drawAny) $.drawHint.appendChild($.drawAny);
   }
@@ -2479,6 +2501,7 @@
   /** 손글씨 판 아래 같은 줄에 저장 확인 — 판이 편집기를 덮고 있어 이 줄만 보인다 */
   function drawSaved(ts) {
     if (!$.drawHint) return;
+    $.drawHint.className = "drawhint ok";
     $.drawHint.textContent = "저장됨 · " + ampm(new Date(Number(ts) || Date.now())) + " — S펜으로 쓰세요. ";
     if ($.drawAny) $.drawHint.appendChild($.drawAny);
   }
@@ -2690,9 +2713,13 @@
   } catch (e) {}
 
   /* ══ 받아쓰기 — 브라우저 음성인식(Web Speech API) ═══════════════
-     말한 것이 커서 자리에 글로 들어가고, 확정된 문장만 남는다. 언어는 한국어 고정.
-     이 API 는 오디오를 브라우저 제조사 서버로 보낸다(안내문에 적어 둔다) — 이 페이지는 저장하지 않는다. */
-  var DICT = { rec: null, on: false, base: "", caret: 0, committed: "", interim: "" };
+     말하는 중인 문장은 편집기 바로 아래 한 줄에 흐리게 보이고, 말이 끝나 확정된 문장만 커서 자리에 남는다.
+     언어는 한국어 고정. 이 API 는 오디오를 브라우저 제조사 서버로 보낸다(안내문에 적어 둔다) — 이 페이지는 저장하지 않는다. */
+  var DICT = {
+    rec: null, on: false, stopping: false, caret: 0,
+    committed: "", interim: "", timer: null, since: 0, kicks: 0
+  };
+  var DICT_KICK_MAX = 6;   /* 20초 안에 이만큼 스스로 끊기면 그만둔다 — 끝없이 다시 켜지 않게 */
 
   function speechCtor() {
     try { return window.SpeechRecognition || window.webkitSpeechRecognition || null; } catch (e) { return null; }
@@ -2702,38 +2729,111 @@
     $.edMsg.textContent = msg || "";
     $.edMsg.hidden = !msg;
   }
-  function dictRender() {
-    var ta = $.edText;
-    if (!ta) return;
-    var c = DICT.caret;
-    ta.value = DICT.base.slice(0, c) + DICT.committed + DICT.interim + DICT.base.slice(c);
-    var at = c + DICT.committed.length + DICT.interim.length;
-    try { ta.selectionStart = at; ta.selectionEnd = at; } catch (e) {}
+
+  /** 편집기 아래 한 줄 — 듣는 중이면 늘 보인다(점멸 점). 말하는 문장이 오면 그 자리에 흐리게. */
+  function dictLive() {
+    if (!$.edLive) return;
+    if (!DICT.on) {
+      $.edLive.hidden = true;
+      $.edLive.className = "edlive";
+      if ($.edLiveText) $.edLiveText.textContent = "";
+      return;
+    }
+    var t = DICT.interim || "";
+    $.edLive.hidden = false;
+    $.edLive.className = "edlive" + (t ? " got" : " wait");
+    if ($.edLiveText) $.edLiveText.textContent = t || "듣는 중…";
   }
+
+  /** 확정된 문장만 커서 자리에 넣는다 — 중간 결과는 본문에 넣지 않는다 */
+  function dictInsert(text) {
+    var ta = $.edText;
+    if (!ta || !text) return;
+    var v = String(ta.value == null ? "" : ta.value);
+    var c = (typeof ta.selectionStart === "number") ? ta.selectionStart : DICT.caret;
+    if (!(c >= 0) || c > v.length) c = v.length;
+    ta.value = v.slice(0, c) + text + v.slice(c);
+    DICT.caret = c + text.length;
+    try { ta.selectionStart = ta.selectionEnd = DICT.caret; } catch (e) {}
+    try { if (ta.scrollHeight) ta.scrollTop = ta.scrollHeight; } catch (e) {}
+  }
+
+  /** 버튼 하나로 상태를 다 보여 준다 — 듣는 중이면 '■ 그만' */
+  function dictButton() {
+    if (!$.edDict) return;
+    $.edDict.setAttribute("aria-pressed", DICT.on ? "true" : "false");
+    $.edDict.className = "tbtn" + (DICT.on ? " on" : "");
+    $.edDict.textContent = DICT.on ? "■ 그만" : "🎤 받아쓰기";
+  }
+
+  function dictClearTimer() {
+    try { if (DICT.timer) clearTimeout(DICT.timer); } catch (e) {}
+    DICT.timer = null;
+  }
+
   function dictFinish() {
     DICT.on = false;
+    DICT.stopping = false;
     DICT.interim = "";
+    dictClearTimer();
     if (DICT.rec) {
       try { DICT.rec.onresult = null; DICT.rec.onend = null; DICT.rec.onerror = null; } catch (e) {}
     }
     DICT.rec = null;
-    if ($.edDict) { $.edDict.setAttribute("aria-pressed", "false"); $.edDict.className = "tbtn"; }
-    dictRender();
+    dictButton();
+    dictLive();
     pushEditorText();
   }
+
   function dictStop() {
+    DICT.stopping = true;
+    dictClearTimer();
     if (!DICT.rec) { dictFinish(); return; }
-    try { DICT.rec.stop(); } catch (e) { dictFinish(); }
+    var rec = DICT.rec;
+    try { rec.stop(); } catch (e) { dictFinish(); return; }
+    /* 끝났다는 신호가 오지 않는 경우가 드물게 있어 — 한 번만 안전장치 */
+    try {
+      DICT.timer = setTimeout(function () {
+        DICT.timer = null;
+        if (DICT.on && DICT.stopping) dictFinish();
+      }, 1500);
+    } catch (e) {}
   }
+
+  /** 무음·화면 전환으로 브라우저가 스스로 끝내면 조용히 다시 켜 계속 듣는다 */
+  function dictKick() {
+    if (!DICT.on || !DICT.rec || DICT.stopping) return;
+    var now = Date.now();
+    if (!DICT.since || now - DICT.since > 20000) { DICT.since = now; DICT.kicks = 0; }
+    if (DICT.kicks >= DICT_KICK_MAX) {
+      edMsg("받아쓰기가 자꾸 끊겨 잠시 멈췄습니다. 다시 눌러 주세요.");
+      dictFinish();
+      return;
+    }
+    DICT.kicks++;
+    try { DICT.rec.start(); return; } catch (e) {}
+    /* 세션이 아직 닫히는 중이면 바로는 안 된다 — 잠깐 뒤 한 번 더 */
+    dictClearTimer();
+    try {
+      DICT.timer = setTimeout(function () {
+        DICT.timer = null;
+        if (!DICT.on || !DICT.rec || DICT.stopping) return;
+        try { DICT.rec.start(); } catch (e) {}
+      }, 220);
+    } catch (e) {}
+  }
+
   function dictStart() {
     var C = speechCtor();
     if (!C) { edMsg("이 브라우저는 받아쓰기를 지원하지 않습니다."); return; }
     var ta = $.edText;
     if (!ta) return;
-    DICT.base = String(ta.value == null ? "" : ta.value);
-    DICT.caret = (typeof ta.selectionStart === "number") ? ta.selectionStart : DICT.base.length;
     DICT.committed = "";
     DICT.interim = "";
+    DICT.stopping = false;
+    DICT.since = 0;
+    DICT.kicks = 0;
+    DICT.caret = (typeof ta.selectionStart === "number") ? ta.selectionStart : String(ta.value || "").length;
     var rec = null;
     try { rec = new C(); } catch (e) { edMsg("받아쓰기를 시작하지 못했습니다."); return; }
     rec.lang = "ko-KR";
@@ -2749,26 +2849,40 @@
         var t = (r && r[0] && r[0].transcript) ? String(r[0].transcript) : "";
         if (r && r.isFinal) fin += t; else mid += t;
       }
-      DICT.committed += fin;
       DICT.interim = mid;
-      dictRender();
-      if (fin) pushEditorText();   /* 확정분은 그 자리에서 저장 */
+      dictLive();                 /* 말하는 중인 문장은 여기에만 — 본문은 확정분만 */
+      if (fin) {
+        dictInsert(fin);
+        DICT.committed += fin;
+        pushEditorText();         /* 확정분은 그 자리에서 저장 */
+      }
     };
     rec.onerror = function (ev) {
       var e = (ev && ev.error) || "";
+      if (DICT.stopping || e === "aborted") return;
+      if (e === "no-speech") return;      /* 무음 — onend 가 조용히 다시 켠다 */
       if (e === "not-allowed" || e === "service-not-allowed") edMsg("마이크 권한이 없어 받아쓰기를 쓸 수 없습니다.");
       else if (e === "network") edMsg("음성인식 서버에 닿지 못했습니다. 잠시 뒤 다시 눌러 주세요.");
-      else if (e === "no-speech") edMsg("");
+      else if (e === "audio-capture") edMsg("마이크를 찾지 못했습니다. 마이크를 확인해 주세요.");
       else edMsg("받아쓰기를 멈췄습니다.");
       dictFinish();
     };
-    rec.onend = function () { if (DICT.on) dictFinish(); };
+    rec.onend = function () {
+      if (!DICT.on) return;
+      if (DICT.stopping) { dictFinish(); return; }   /* 사용자가 '그만'을 눌렀다 */
+      dictKick();                                    /* 스스로 끝났으면 조용히 계속 */
+    };
     DICT.rec = rec;
     DICT.on = true;
     edMsg("");
-    try { rec.start(); } catch (e) { DICT.on = false; DICT.rec = null; edMsg("받아쓰기를 시작하지 못했습니다."); return; }
-    if (!DICT.on) return;   /* 시작하자마자 권한 거부 등으로 끝났으면 그대로 둔다 */
-    if ($.edDict) { $.edDict.setAttribute("aria-pressed", "true"); $.edDict.className = "tbtn on"; }
+    dictButton();
+    dictLive();
+    try { rec.start(); } catch (e) {
+      DICT.on = false; DICT.rec = null;
+      edMsg("받아쓰기를 시작하지 못했습니다.");
+      dictButton(); dictLive();
+      return;
+    }
   }
   on($.edDict, "click", function () {
     if (DICT.on) { dictStop(); return; }
@@ -3238,6 +3352,11 @@
     };
     window.__vnVoice = {
       dictOn: function () { return DICT.on; },
+      dictKicks: function () { return DICT.kicks; },
+      live: function () {
+        if (!$.edLive) return null;
+        return { on: !$.edLive.hidden, text: ($.edLiveText && $.edLiveText.textContent) || "", cls: $.edLive.className };
+      },
       recOn: function () { return REC.on; },
       audio: function () { var n = findNote(S.edId); return n ? list(n.audio) : []; },
       localSync: function (id) { var got = null; LocalAudio.get(id, function (b) { got = b; }); return !!got; },
