@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="바이브 노트">
 <title>바이브 노트</title>
-<meta name="description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트. 열면 바로 쓰고 이 기기에 저장됩니다. 구글 계정을 연결하면 내 드라이브로 이어집니다.">
+<meta name="description" content="한 일·내가 세운 기준·결정한 것을 날마다 한 줄씩 적는 노트. 열면 바로 쓰고 이 기기에 저장됩니다. 구글 계정을 연결하면 내 드라이브로 이어집니다.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="바이브 노트">
-<meta property="og:description" content="한 일·쓴 기준·결정한 것을 날마다 한 줄씩 적는 노트 · 열면 바로, 이 기기에 저장">
+<meta property="og:description" content="한 일·내가 세운 기준·결정한 것을 날마다 한 줄씩 적는 노트 · 열면 바로, 이 기기에 저장">
 <meta property="og:image" content="https://sibssae101-glitch.github.io/vibe-note-private/icon-512.png">
 <meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest.webmanifest">
@@ -305,7 +305,7 @@
   }
   .x:active{color:var(--accent)}
 
-  /* 해야 할 거 */
+  /* 할 일 */
   ul.todo{list-style:none;margin:0;padding:0}
   ul.todo li{display:flex;align-items:flex-start;gap:9px;padding:5px 0;font-size:13.5px;line-height:1.55}
   ul.todo li .t{flex:1;min-width:0;cursor:pointer}
@@ -1932,10 +1932,10 @@
     return ul;
   }
 
-  var SEC_LABEL = { did: "한 일", rules: "쓴 기준", decided: "결정한 것", todos: "해야 할 거" };
+  var SEC_LABEL = { did: "한 일", rules: "내가 세운 기준", decided: "결정한 것", todos: "할 일" };
   var SEC_PH = {
-    did: "한 일에 한 줄 추가", rules: "쓴 기준에 한 줄 추가",
-    decided: "결정한 것에 한 줄 추가", todos: "해야 할 거에 한 줄 추가"
+    did: "한 일에 한 줄 추가", rules: "내가 세운 기준에 한 줄 추가",
+    decided: "결정한 것에 한 줄 추가", todos: "할 일에 한 줄 추가"
   };
 
   function renderDay() {
